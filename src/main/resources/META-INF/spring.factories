@@ -1,0 +1,6 @@
+org.springframework.boot.autoconfigure.EnableAutoConfiguration=\
+  org.springframework.security.oauth2.server.authorization.client.RedisRegisteredClientRepository,\
+  org.springframework.security.oauth2.server.authorization.configuration.RedisSpringAuthorizationServerConfiguration,\
+  org.springframework.security.oauth2.server.authorization.properties.SpringAuthorizationServerRedisProperties,\
+  org.springframework.security.oauth2.server.authorization.RedisOAuth2AuthorizationConsentService,\
+  org.springframework.security.oauth2.server.authorization.RedisOAuth2AuthorizationService
