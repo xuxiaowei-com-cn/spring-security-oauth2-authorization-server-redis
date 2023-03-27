@@ -56,12 +56,12 @@
     <img alt="IntelliJ IDEA" src="https://img.shields.io/static/v1?logo=data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAADAAAAAwCAAAAAByaaZbAAAABGdBTUEAALGPC/xhBQAAACBjSFJNAAB6JgAAgIQAAPoAAACA6AAAdTAAAOpgAAA6mAAAF3CculE8AAAAAmJLR0QA/4ePzL8AAAAHdElNRQfmBRkBICRBfW8eAAABPklEQVRIx+2UTStEYRiGr/kqZWaKMoyQUsoCWdn4AZKPlZSF5fgPVhYWStlZqPkB7GynWSg/QCmhUFOUGCPNZBrlnNtijmneOYZzykrn2p2e536f577P2wsBPvmQlACQg13Mr4b9CCTpuMunQIdGT8gQRCBZAQRPu0B6aRjsvqKXCRcAJO8lTTf3/GQJKF8Bz5481CfMvEnnxtrRduKhPET7R6GWka+UrBW//8Hej3haqZQFYgNz8VDmYbNNT8iSFDdMM1iSyh3uWHsAesNgVc1D7k4hMeISrN0uAOtAwTYF6Smg2UQUYDYbO8qdjS0Cua9CahsgPd8NleuW3WOFRiTV+nTj8mnL5XbixinVlnEJ7L1vkuzcuJT0ejDufL98UTjZmWyJsqFJvT9aBAT8J5zrrXYFF788xn8gCPDCJ2cr3I1zqSjOAAAAJXRFWHRkYXRlOmNyZWF0ZQAyMDIyLTA1LTI1VDAxOjMyOjM2KzAwOjAwH/0yeQAAACV0RVh0ZGF0ZTptb2RpZnkAMjAyMi0wNS0yNVQwMTozMjozNiswMDowMG6gisUAAAAASUVORK5CYII=&message=IntelliJ IDEA">
   </a>
 
-  <a target="_blank" href="https://s01.oss.sonatype.org/content/repositories/snapshots/cn/com/xuxiaowei/boot/spring-security-oauth2-authorization-server-redis">
-    <img alt="snapshots" src="https://img.shields.io/maven-metadata/v?label=snapshots&metadataUrl=https://s01.oss.sonatype.org/content/repositories/snapshots/cn/com/xuxiaowei/boot/spring-security-oauth2-authorization-server-redis/maven-metadata.xml">
+  <a target="_blank" href="https://s01.oss.sonatype.org/content/repositories/snapshots/cn/com/xuxiaowei/boot/next/spring-security-oauth2-authorization-server-redis">
+    <img alt="snapshots" src="https://img.shields.io/maven-metadata/v?label=snapshots&metadataUrl=https://s01.oss.sonatype.org/content/repositories/snapshots/cn/com/xuxiaowei/boot/next/spring-security-oauth2-authorization-server-redis/maven-metadata.xml">
   </a>
 
-  <a target="_blank" href="https://s01.oss.sonatype.org/content/repositories/releases/cn/com/xuxiaowei/boot/spring-security-oauth2-authorization-server-redis">
-    <img alt="releases" src="https://img.shields.io/maven-metadata/v?label=releases&color=blue&metadataUrl=https://s01.oss.sonatype.org/content/repositories/releases/cn/com/xuxiaowei/boot/spring-security-oauth2-authorization-server-redis/maven-metadata.xml">
+  <a target="_blank" href="https://s01.oss.sonatype.org/content/repositories/releases/cn/com/xuxiaowei/boot/next/spring-security-oauth2-authorization-server-redis">
+    <img alt="releases" src="https://img.shields.io/maven-metadata/v?label=releases&color=blue&metadataUrl=https://s01.oss.sonatype.org/content/repositories/releases/cn/com/xuxiaowei/boot/next/spring-security-oauth2-authorization-server-redis/maven-metadata.xml">
   </a>
 
   <a target="_blank" href="https://github.com/xuxiaowei-com-cn/spring-security-oauth2-authorization-server-redis">
@@ -105,15 +105,15 @@
   </a>
 
   <a target="_blank" href="https://github.com/xuxiaowei-com-cn/spring-security-oauth2-authorization-server-redis/blob/main/pom.xml">
-    <img alt="Spring Boot" src="https://img.shields.io/static/v1?logo=Spring Boot&message=2.7.x&color=blue">
+    <img alt="Spring Boot" src="https://img.shields.io/static/v1?logo=Spring Boot&message=3.0.0">
   </a>
 
   <a target="_blank" href="https://github.com/xuxiaowei-com-cn/spring-security-oauth2-authorization-server-redis/blob/main/pom.xml">
-    <img alt="OAuth 2.1" src="https://img.shields.io/static/v1?label=OAuth 2.1&message=0.4.1&color=blue">
+    <img alt="OAuth 2.1" src="https://img.shields.io/static/v1?label=OAuth 2.1&message=1.0.1&color=blue">
   </a>
 
-  <a target="_blank" href="https://github.com/alibaba/dragonwell8/releases/tag/dragonwell-8.10.11_jdk8u322-ga">
-    <img alt="JDK" src="https://img.shields.io/badge/JDK-1.8.0_322-blue.svg"/>
+  <a target="_blank" href="https://github.com/alibaba/dragonwell17/releases/tag/dragonwell-17.0.3.0.3%2B7_jdk-17.0.3-ga">
+    <img alt="JDK" src="https://img.shields.io/badge/JDK-17.0.3-blue.svg"/>
   </a>
 
   <a target="_blank" href="https://www.apache.org/licenses/LICENSE-2.0">
@@ -137,8 +137,8 @@
 由于流水线时间等问题，快照版发布流水线在[gitcode](https://gitcode.net/xuxiaowei-com-cn/spring-security-oauth2-authorization-server-redis)
 ，正式版发布流水线在[gitlab](https://gitlab.com/xuxiaowei-com-cn/spring-security-oauth2-authorization-server-redis)
 
-- [快照版](https://s01.oss.sonatype.org/content/repositories/snapshots/cn/com/xuxiaowei/boot/spring-security-oauth2-authorization-server-redis)
-- [发布版](https://s01.oss.sonatype.org/content/repositories/releases/cn/com/xuxiaowei/boot/spring-security-oauth2-authorization-server-redis)
+- [快照版](https://s01.oss.sonatype.org/content/repositories/snapshots/cn/com/xuxiaowei/boot/next/spring-security-oauth2-authorization-server-redis)
+- [发布版](https://s01.oss.sonatype.org/content/repositories/releases/cn/com/xuxiaowei/boot/next/spring-security-oauth2-authorization-server-redis)
 
 ## [更新日志](CHANGELOG.md)
 
