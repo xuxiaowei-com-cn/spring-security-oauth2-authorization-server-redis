@@ -81,7 +81,28 @@
 
         <dependency>
             <groupId>org.springframework.boot</groupId>
-            <artifactId>spring-boot-starter-web</artifactId>
+            <artifactId>spring-boot-starter-data-redis</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>org.springframework.boot</groupId>
+            <artifactId>spring-boot-starter-jdbc</artifactId>
+        </dependency>
+
+        <dependency>
+            <groupId>com.fasterxml.jackson.core</groupId>
+            <artifactId>jackson-databind</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>com.fasterxml.jackson.datatype</groupId>
+            <artifactId>jackson-datatype-jsr310</artifactId>
+        </dependency>
+
+        <!-- 仅用于测试 -->
+        <dependency>
+            <groupId>com.h2database</groupId>
+            <artifactId>h2</artifactId>
+            <!-- 依赖传递性：https://maven.apache.org/guides/introduction/introduction-to-dependency-mechanism.html -->
+            <scope>test</scope>
         </dependency>
 
         <dependency>
@@ -132,7 +153,8 @@
 
     <scm>
         <url>https://github.com/xuxiaowei-com-cn/spring-security-oauth2-authorization-server-redis</url>
-        <connection>scm:git:https://git@github.com/xuxiaowei-com-cn/spring-security-oauth2-authorization-server-redis.git
+        <connection>
+            scm:git:https://git@github.com/xuxiaowei-com-cn/spring-security-oauth2-authorization-server-redis.git
         </connection>
 
     </scm>

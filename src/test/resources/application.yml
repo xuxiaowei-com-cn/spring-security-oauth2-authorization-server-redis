@@ -1,0 +1,17 @@
+#
+#
+spring:
+  redis:
+    host: 127.0.0.1
+    port: 6379
+    password: xuxiaowei.com.cn
+    database: 0
+
+#
+#
+logging:
+  level:
+    org.springframework.security.oauth2.server.authorization.client.RedisRegisteredClientRepository: debug
+    org.springframework.security.oauth2.server.authorization.client.RedisRegisteredClientRepositoryConfiguration: debug
+    org.springframework.security.oauth2.server.authorization.RedisOAuth2AuthorizationService: debug
+    org.springframework.security.oauth2.server.authorization.RedisOAuth2AuthorizationServiceConfiguration: debug
