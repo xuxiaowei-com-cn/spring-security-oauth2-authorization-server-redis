@@ -1,42 +1,89 @@
 {
-  "id": "25aee51d-51a0-4c7c-aa42-e1de0046dca5",
+  "@class": "org.springframework.security.oauth2.server.authorization.OAuth2Authorization",
+  "id": "c703d612-e89b-48a9-b951-b24251fa58c2",
   "registeredClientId": "bcc73542-6c8e-44e7-a1b4-51f1c4089268",
   "principalName": "zhang-san",
   "authorizationGrantType": {
     "value": "authorization_code"
   },
-  "authorizedScopes": [],
+  "authorizedScopes": [
+    "java.util.Collections$UnmodifiableSet",
+    []
+  ],
   "attributes": {
+    "@class": "java.util.Collections$UnmodifiableMap",
     "org.springframework.security.oauth2.core.endpoint.OAuth2AuthorizationRequest": {
-      "authorizationUri": "http://192.168.1.101:1401/oauth2/authorize?response_type=code&client_id=xuxiaowei_client_id&scope=snsapi_base&state=ad33a641-a8c6-4c3b-9e97-379694dfd9da&redirect_uri=http://127.0.0.1:1401/code",
+      "@class": "org.springframework.security.oauth2.core.endpoint.OAuth2AuthorizationRequest",
+      "authorizationUri": "http://192.168.1.101:1401/oauth2/authorize",
+      "authorizationGrantType": {
+        "value": "authorization_code"
+      },
       "responseType": {
         "value": "code"
       },
       "clientId": "xuxiaowei_client_id",
       "redirectUri": "http://127.0.0.1:1401/code",
       "scopes": [
-        "snsapi_base"
+        "java.util.Collections$UnmodifiableSet",
+        [
+          "snsapi_base"
+        ]
       ],
       "state": "ad33a641-a8c6-4c3b-9e97-379694dfd9da",
-      "additionalParameters": {},
-      "authorizationRequestUri": "http://192.168.1.101:1401/oauth2/authorize?response_type=code&response_type=code&client_id=xuxiaowei_client_id&client_id=xuxiaowei_client_id&scope=snsapi_base&scope=snsapi_base&state=ad33a641-a8c6-4c3b-9e97-379694dfd9da&state=ad33a641-a8c6-4c3b-9e97-379694dfd9da&redirect_uri=http://127.0.0.1:1401/code&redirect_uri=http://127.0.0.1:1401/code",
-      "attributes": {},
-      "grantType": {
-        "value": "authorization_code"
+      "additionalParameters": {
+        "@class": "java.util.Collections$UnmodifiableMap"
+      },
+      "authorizationRequestUri": "http://192.168.1.101:1401/oauth2/authorize?response_type=code&client_id=xuxiaowei_client_id&scope=snsapi_base&state=ad33a641-a8c6-4c3b-9e97-379694dfd9da&redirect_uri=http://127.0.0.1:1401/code",
+      "attributes": {
+        "@class": "java.util.Collections$UnmodifiableMap"
       }
+    },
+    "java.security.Principal": {
+      "@class": "org.springframework.security.authentication.UsernamePasswordAuthenticationToken",
+      "authorities": [
+        "java.util.Collections$EmptyList",
+        []
+      ],
+      "details": null,
+      "authenticated": false,
+      "principal": {
+        "@class": "org.springframework.security.core.userdetails.User",
+        "password": "",
+        "username": "zhang-san",
+        "authorities": [
+          "java.util.Collections$UnmodifiableSet",
+          [
+            {
+              "@class": "org.springframework.security.core.authority.SimpleGrantedAuthority",
+              "authority": "student"
+            }
+          ]
+        ],
+        "accountNonExpired": true,
+        "accountNonLocked": true,
+        "credentialsNonExpired": true,
+        "enabled": true
+      },
+      "credentials": null
     }
   },
   "accessToken": {
+    "@class": "org.springframework.security.oauth2.server.authorization.OAuth2Authorization$Token",
     "token": {
+      "@class": "org.springframework.security.oauth2.core.OAuth2AccessToken",
       "tokenValue": "d8e3e7c0-3ca0-4797-a30b-51385a47f921",
-      "issuedAt": "2023-03-27T14:47:01.148109Z",
-      "expiresAt": "2023-03-28T14:47:01.148109Z",
+      "issuedAt": "2023-03-27T15:04:49.500495Z",
+      "expiresAt": "2023-03-28T15:04:49.500495Z",
       "tokenType": {
         "value": "Bearer"
       },
-      "scopes": []
+      "scopes": [
+        "java.util.Collections$UnmodifiableSet",
+        []
+      ]
     },
     "metadata": {
+      "@class": "java.util.Collections$UnmodifiableMap",
       "metadata.token.invalidated": false
     },
     "active": true,
@@ -46,12 +93,15 @@
     "beforeUse": false
   },
   "refreshToken": {
+    "@class": "org.springframework.security.oauth2.server.authorization.OAuth2Authorization$Token",
     "token": {
+      "@class": "org.springframework.security.oauth2.core.OAuth2RefreshToken",
       "tokenValue": "d8e3e7c0-3ca0-4797-a30b-51385a47f921",
-      "issuedAt": "2023-03-29T14:47:01.150116Z",
+      "issuedAt": "2023-03-29T15:04:49.505493Z",
       "expiresAt": null
     },
     "metadata": {
+      "@class": "java.util.Collections$UnmodifiableMap",
       "metadata.token.invalidated": false
     },
     "active": true,

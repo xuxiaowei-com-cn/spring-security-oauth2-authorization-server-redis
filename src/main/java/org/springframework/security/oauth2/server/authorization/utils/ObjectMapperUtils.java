@@ -21,6 +21,7 @@ package org.springframework.security.oauth2.server.authorization.utils;
  */
 
 import com.fasterxml.jackson.databind.DeserializationFeature;
+import com.fasterxml.jackson.databind.Module;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.SerializationFeature;
 import com.fasterxml.jackson.databind.module.SimpleModule;
@@ -31,11 +32,14 @@ import com.fasterxml.jackson.datatype.jsr310.deser.LocalTimeDeserializer;
 import com.fasterxml.jackson.datatype.jsr310.ser.LocalDateSerializer;
 import com.fasterxml.jackson.datatype.jsr310.ser.LocalDateTimeSerializer;
 import com.fasterxml.jackson.datatype.jsr310.ser.LocalTimeSerializer;
+import org.springframework.security.jackson2.SecurityJackson2Modules;
 import org.springframework.security.oauth2.core.AuthorizationGrantType;
 import org.springframework.security.oauth2.core.ClientAuthenticationMethod;
 import org.springframework.security.oauth2.server.authorization.OAuth2Authorization;
+import org.springframework.security.oauth2.server.authorization.client.JdbcRegisteredClientRepository;
 import org.springframework.security.oauth2.server.authorization.client.RegisteredClient;
 import org.springframework.security.oauth2.server.authorization.deserializer.*;
+import org.springframework.security.oauth2.server.authorization.jackson2.OAuth2AuthorizationServerJackson2Module;
 import org.springframework.security.oauth2.server.authorization.settings.ClientSettings;
 import org.springframework.security.oauth2.server.authorization.settings.TokenSettings;
 
@@ -43,6 +47,7 @@ import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.LocalTime;
 import java.time.format.DateTimeFormatter;
+import java.util.List;
 
 /**
  * {@link ObjectMapper} 工具类
@@ -84,14 +89,23 @@ public class ObjectMapperUtils {
 
 		// 添加 OAuth 2.1 的反序列化
 		SimpleModule simpleModule = new SimpleModule();
-		simpleModule.addDeserializer(ClientAuthenticationMethod.class, new ClientAuthenticationMethodDeserializer());
-		simpleModule.addDeserializer(AuthorizationGrantType.class, new AuthorizationGrantTypeDeserializer());
-		simpleModule.addDeserializer(ClientSettings.class, new ClientSettingsDeserializer());
-		simpleModule.addDeserializer(TokenSettings.class, new TokenSettingsDeserializer());
+//		simpleModule.addDeserializer(ClientAuthenticationMethod.class, new ClientAuthenticationMethodDeserializer());
+//		simpleModule.addDeserializer(AuthorizationGrantType.class, new AuthorizationGrantTypeDeserializer());
+//		simpleModule.addDeserializer(ClientSettings.class, new ClientSettingsDeserializer());
+//		simpleModule.addDeserializer(TokenSettings.class, new TokenSettingsDeserializer());
 		simpleModule.addDeserializer(OAuth2Authorization.class, new OAuth2AuthorizationDeserializer());
 
 		// 用于注册可以扩展该映射器提供的功能的模块的方法; 例如，通过添加自定义序列化程序和反序列化程序的提供程序。
 		objectMapper.registerModules(javaTimeModule, simpleModule);
+
+		ClassLoader classLoader = JdbcRegisteredClientRepository.class.getClassLoader();
+		List<Module> securityModules = SecurityJackson2Modules.getModules(classLoader);
+		objectMapper.registerModules(securityModules);
+		objectMapper.registerModule(new OAuth2AuthorizationServerJackson2Module());
+
+		objectMapper.registerModule(new OAuth2AuthorizationJackson2Module());
+
+		objectMapper.addMixIn(OAuth2Authorization.class, OAuth2AuthorizationMixin.class);
 
 		return objectMapper;
 	}
