@@ -43,16 +43,16 @@ public class SpringAuthorizationServerRedisProperties {
 	/**
 	 * registered client Redis 超时时间，单位为秒
 	 */
-	private long registeredClientTimeout = 3000000;
+	private long registeredClientTimeout = 300;
 
 	/**
 	 * authorization Redis 超时时间，单位为秒
 	 */
-	private long authorizationTimeout = 3000000;
+	private long authorizationTimeout = 300;
 
 	/**
 	 * authorization consent Redis 超时时间，单位为秒
 	 */
-	private long authorizationConsentTimeout = 3000000;
+	private long authorizationConsentTimeout = 300;
 
 }
