@@ -27,6 +27,7 @@ import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.security.oauth2.core.OAuth2AccessToken;
+import org.springframework.security.oauth2.core.OAuth2RefreshToken;
 import org.springframework.security.oauth2.server.authorization.client.JdbcRegisteredClientRepository;
 import org.springframework.security.oauth2.server.authorization.properties.SpringAuthorizationServerRedisProperties;
 import org.springframework.stereotype.Service;
@@ -198,11 +199,21 @@ public class RedisOAuth2AuthorizationService implements OAuth2AuthorizationServi
 		if (accessToken != null) {
 			OAuth2AccessToken token = accessToken.getToken();
 			if (token != null) {
-				String tokenType = token.getTokenType().getValue();
 				String tokenValue = token.getTokenValue();
 				redisTemplate.opsForValue()
-					.set(prefix + OAUTH2_AUTHORIZATION_TOKEN_TYPE + tokenType + ":" + tokenValue, authorization,
-							timeout, unit);
+					.set(prefix + OAUTH2_AUTHORIZATION_TOKEN_TYPE + OAuth2TokenType.ACCESS_TOKEN.getValue() + ":"
+							+ tokenValue, authorization, timeout, unit);
+			}
+		}
+
+		OAuth2Authorization.Token<OAuth2RefreshToken> refreshToken = authorization.getRefreshToken();
+		if (refreshToken != null) {
+			OAuth2RefreshToken token = refreshToken.getToken();
+			if (token != null) {
+				String tokenValue = token.getTokenValue();
+				redisTemplate.opsForValue()
+					.set(prefix + OAUTH2_AUTHORIZATION_TOKEN_TYPE + OAuth2TokenType.REFRESH_TOKEN.getValue() + ":"
+							+ tokenValue, authorization, timeout, unit);
 			}
 		}
 
