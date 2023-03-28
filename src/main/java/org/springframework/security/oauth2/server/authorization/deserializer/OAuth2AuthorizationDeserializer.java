@@ -113,7 +113,7 @@ public class OAuth2AuthorizationDeserializer extends StdDeserializer<OAuth2Autho
 
 			OAuth2AuthorizationRequest.Builder oauth2AuthorizationRequestBuilder = OAuth2AuthorizationRequest
 				.authorizationCode()
-				.authorizationUri(oauth2AuthorizationRequestMap.get("authorizationRequestUri").toString())
+				.authorizationUri(oauth2AuthorizationRequestMap.get("authorizationUri").toString())
 				.clientId(clientId)
 				.redirectUri(oauth2AuthorizationRequestMap.get("redirectUri").toString())
 				.scopes(scopes)
