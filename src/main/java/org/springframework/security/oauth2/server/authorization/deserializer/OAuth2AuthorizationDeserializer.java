@@ -84,9 +84,8 @@ public class OAuth2AuthorizationDeserializer extends StdDeserializer<OAuth2Autho
 
 		TreeNode attributes = treeNode.get("attributes");
 
-		Object principalObj = attributes.get(Principal.class.getName());
-
-		String oauth2AuthorizationRequestStr = attributes.get(OAuth2AuthorizationRequest.class.getName()).toString();
+		Object oauth2AuthorizationRequestObj = attributes.get(OAuth2AuthorizationRequest.class.getName());
+		String oauth2AuthorizationRequestStr = oauth2AuthorizationRequestObj.toString();
 
 		@SuppressWarnings("all")
 		Map<String, Object> oauth2AuthorizationRequestMap = objectMapper.readValue(oauth2AuthorizationRequestStr,
@@ -100,27 +99,27 @@ public class OAuth2AuthorizationDeserializer extends StdDeserializer<OAuth2Autho
 			authorizationGrantType = new AuthorizationGrantType(value);
 		}
 
-		OAuth2AuthorizationRequest oauth2AuthorizationRequest = null;
-		if (AuthorizationGrantType.AUTHORIZATION_CODE.equals(authorizationGrantType)) {
-
-			Object scopesObj = oauth2AuthorizationRequestMap.get("scopes");
-			Set<String> scopes = new HashSet<>();
-			if (scopesObj instanceof List) {
-				@SuppressWarnings("all")
-				List<String> scopesList = (List) scopesObj;
-				scopes.addAll(scopesList);
-			}
-
-			OAuth2AuthorizationRequest.Builder oauth2AuthorizationRequestBuilder = OAuth2AuthorizationRequest
-				.authorizationCode()
-				.authorizationUri(oauth2AuthorizationRequestMap.get("authorizationUri").toString())
-				.clientId(clientId)
-				.redirectUri(oauth2AuthorizationRequestMap.get("redirectUri").toString())
-				.scopes(scopes)
-				.state(oauth2AuthorizationRequestMap.get("state").toString());
-
-			oauth2AuthorizationRequest = oauth2AuthorizationRequestBuilder.build();
-		}
+		// OAuth2AuthorizationRequest oauth2AuthorizationRequest = null;
+//		if (AuthorizationGrantType.AUTHORIZATION_CODE.equals(authorizationGrantType)) {
+//
+//			Object scopesObj = oauth2AuthorizationRequestMap.get("scopes");
+//			Set<String> scopes = new HashSet<>();
+//			if (scopesObj instanceof List) {
+//				@SuppressWarnings("all")
+//				List<String> scopesList = (List) scopesObj;
+//				scopes.addAll(scopesList);
+//			}
+//
+//			OAuth2AuthorizationRequest.Builder oauth2AuthorizationRequestBuilder = OAuth2AuthorizationRequest
+//				.authorizationCode()
+//				.authorizationUri(oauth2AuthorizationRequestMap.get("authorizationUri").toString())
+//				.clientId(clientId)
+//				.redirectUri(oauth2AuthorizationRequestMap.get("redirectUri").toString())
+//				.scopes(scopes)
+//				.state(oauth2AuthorizationRequestMap.get("state").toString());
+//
+//			 oauth2AuthorizationRequest = oauth2AuthorizationRequestBuilder.build();
+//		}
 
 		String redirectUri = oauth2AuthorizationRequestMap.get("redirectUri").toString();
 
@@ -198,6 +197,8 @@ public class OAuth2AuthorizationDeserializer extends StdDeserializer<OAuth2Autho
 
 		String id = treeNodeMap.get("id").toString();
 
+		Object principalObj = attributes.get(Principal.class.getName());
+
 		OAuth2Authorization.Builder oauth2AuthorizationBuilder = OAuth2Authorization
 			.withRegisteredClient(registeredClient)
 			.id(id)
@@ -205,7 +206,8 @@ public class OAuth2AuthorizationDeserializer extends StdDeserializer<OAuth2Autho
 			.refreshToken(refreshToken)
 			.principalName(principalName)
 			.authorizationGrantType(authorizationGrantType)
-			.attribute(OAuth2AuthorizationRequest.class.getName(), oauth2AuthorizationRequest);
+			.attribute(OAuth2AuthorizationRequest.class.getName(), oauth2AuthorizationRequestObj)
+			.attribute(Principal.class.getName(), principalObj);
 
 		return oauth2AuthorizationBuilder.build();
 	}
