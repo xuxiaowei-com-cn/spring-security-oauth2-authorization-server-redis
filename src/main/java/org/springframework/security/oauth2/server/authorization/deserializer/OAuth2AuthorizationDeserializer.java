@@ -196,8 +196,11 @@ public class OAuth2AuthorizationDeserializer extends StdDeserializer<OAuth2Autho
 			}
 		}
 
+		String id = treeNodeMap.get("id").toString();
+
 		OAuth2Authorization.Builder oauth2AuthorizationBuilder = OAuth2Authorization
 			.withRegisteredClient(registeredClient)
+			.id(id)
 			.accessToken(accessToken)
 			.refreshToken(refreshToken)
 			.principalName(principalName)
