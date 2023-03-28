@@ -8,8 +8,9 @@ import java.util.Set;
 
 /**
  * {@link OAuth2AuthorizationConsent} 反序列化
+ * <p>
+ * <code>org.springframework.security.web.jackson2.WebAuthenticationDetailsMixin</code>
  *
- * @see org.springframework.security.web.jackson2.WebAuthenticationDetailsMixin
  * @since 0.0.1
  * @author xuxiaowei
  */
