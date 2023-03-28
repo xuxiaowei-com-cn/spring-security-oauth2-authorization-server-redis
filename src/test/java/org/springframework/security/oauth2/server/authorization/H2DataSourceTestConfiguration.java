@@ -22,6 +22,7 @@ package org.springframework.security.oauth2.server.authorization;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.fasterxml.jackson.databind.ObjectWriter;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.boot.test.context.TestConfiguration;
 import org.springframework.context.annotation.Bean;
@@ -160,9 +161,10 @@ public class H2DataSourceTestConfiguration {
 		jdbcRegisteredClientRepository.save(registeredClient);
 
 		ObjectMapper objectMapper = ObjectMapperUtils.redis();
+		ObjectWriter objectWriter = objectMapper.writerWithDefaultPrettyPrinter();
 
 		RegisteredClient registeredClientByDatabase = jdbcRegisteredClientRepository.findById(ID);
-		log.info("检查数据库初始化结果 RegisteredClient：{}", objectMapper.writeValueAsString(registeredClientByDatabase));
+		log.info("检查数据库初始化结果 RegisteredClient：{}", objectWriter.writeValueAsString(registeredClientByDatabase));
 	}
 
 	/**
@@ -203,9 +205,10 @@ public class H2DataSourceTestConfiguration {
 		jdbcOAuth2AuthorizationService.save(authorization);
 
 		ObjectMapper objectMapper = ObjectMapperUtils.redis();
+		ObjectWriter objectWriter = objectMapper.writerWithDefaultPrettyPrinter();
 
 		OAuth2Authorization auth2AuthorizationByDatabase = jdbcOAuth2AuthorizationService.findById(AUTHORIZATION_ID);
-		log.info("检查数据库初始化结果 OAuth2Authorization：{}", objectMapper.writeValueAsString(auth2AuthorizationByDatabase));
+		log.info("检查数据库初始化结果 OAuth2Authorization：{}", objectWriter.writeValueAsString(auth2AuthorizationByDatabase));
 	}
 
 	private Authentication principal() {

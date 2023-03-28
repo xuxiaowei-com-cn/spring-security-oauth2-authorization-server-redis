@@ -22,6 +22,7 @@ package org.springframework.security.oauth2.server.authorization;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.fasterxml.jackson.databind.ObjectWriter;
 import lombok.extern.slf4j.Slf4j;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -78,10 +79,12 @@ class RedisOAuth2AuthorizationServiceTests {
 	@Test
 	void findById() throws JsonProcessingException {
 		ObjectMapper objectMapper = ObjectMapperUtils.redis();
+		ObjectWriter objectWriter = objectMapper.writerWithDefaultPrettyPrinter();
+
 		OAuth2Authorization auth2Authorization = redisOAuth2AuthorizationService.findById(AUTHORIZATION_ID);
-		log.info("根据 id：{} 查询Redis中的授权（不存在时从数据库中查询）：{}", ID, objectMapper.writeValueAsString(auth2Authorization));
+		log.info("根据 id：{} 查询Redis中的授权（不存在时从数据库中查询）：{}", ID, objectWriter.writeValueAsString(auth2Authorization));
 		OAuth2Authorization byId = redisOAuth2AuthorizationService.findById(AUTHORIZATION_ID);
-		log.info(objectMapper.writeValueAsString(byId));
+		log.info("\n{}", objectWriter.writeValueAsString(byId));
 	}
 
 	@Test

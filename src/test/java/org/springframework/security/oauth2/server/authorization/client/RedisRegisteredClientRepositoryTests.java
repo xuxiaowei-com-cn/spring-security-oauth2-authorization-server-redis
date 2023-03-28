@@ -22,6 +22,7 @@ package org.springframework.security.oauth2.server.authorization.client;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.fasterxml.jackson.databind.ObjectWriter;
 import lombok.extern.slf4j.Slf4j;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -99,27 +100,32 @@ class RedisRegisteredClientRepositoryTests {
 		redisRegisteredClientRepository.save(registeredClient);
 
 		ObjectMapper objectMapper = ObjectMapperUtils.redis();
+		ObjectWriter objectWriter = objectMapper.writerWithDefaultPrettyPrinter();
 
 		RegisteredClient registeredClientByDatabase = jdbcRegisteredClientRepository.findById(id);
-		log.info("直接查询数据库中的保存的结果：{}", objectMapper.writeValueAsString(registeredClientByDatabase));
+		log.info("直接查询数据库中的保存的结果：{}", objectWriter.writeValueAsString(registeredClientByDatabase));
 	}
 
 	@Test
 	void findById() throws JsonProcessingException {
 		ObjectMapper objectMapper = ObjectMapperUtils.redis();
+		ObjectWriter objectWriter = objectMapper.writerWithDefaultPrettyPrinter();
+
 		RegisteredClient clientRepositoryByRedis = redisRegisteredClientRepository.findById(ID);
-		log.info("根据 id：{} 查询Redis中的客户（不存在时从数据库中查询）：{}", ID, objectMapper.writeValueAsString(clientRepositoryByRedis));
+		log.info("根据 id：{} 查询Redis中的客户（不存在时从数据库中查询）：{}", ID, objectWriter.writeValueAsString(clientRepositoryByRedis));
 		RegisteredClient byId = redisRegisteredClientRepository.findById(ID);
-		log.info(objectMapper.writeValueAsString(byId));
+		log.info("\n{}", objectWriter.writeValueAsString(byId));
 	}
 
 	@Test
 	void findByClientId() throws JsonProcessingException {
 		ObjectMapper objectMapper = ObjectMapperUtils.redis();
+		ObjectWriter objectWriter = objectMapper.writerWithDefaultPrettyPrinter();
+
 		RegisteredClient registeredClient = jdbcRegisteredClientRepository.findByClientId(CLIENT_ID);
-		log.info("根据 clientId：{} 直接查询数据库中的客户：{}", CLIENT_ID, objectMapper.writeValueAsString(registeredClient));
+		log.info("根据 clientId：{} 直接查询数据库中的客户：{}", CLIENT_ID, objectWriter.writeValueAsString(registeredClient));
 		RegisteredClient byId = jdbcRegisteredClientRepository.findByClientId(CLIENT_ID);
-		log.info(objectMapper.writeValueAsString(byId));
+		log.info("\n{}", objectWriter.writeValueAsString(byId));
 	}
 
 }
