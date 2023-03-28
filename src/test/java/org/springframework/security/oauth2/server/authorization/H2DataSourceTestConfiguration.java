@@ -49,8 +49,14 @@ import org.springframework.security.oauth2.server.authorization.web.authenticati
 import javax.sql.DataSource;
 import java.security.Principal;
 import java.time.Instant;
+import java.time.LocalDateTime;
+import java.time.ZoneId;
+import java.time.ZonedDateTime;
 import java.time.temporal.ChronoUnit;
-import java.util.*;
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.HashMap;
+import java.util.List;
 
 /**
  * 测试 数据源
@@ -175,11 +181,13 @@ public class H2DataSourceTestConfiguration {
 		RegisteredClient registeredClient = jdbcRegisteredClientRepository.findById(ID);
 		assert registeredClient != null;
 
-		Instant issuedAt = Instant.now();
-		Instant expiresAt = Instant.now().plus(1, ChronoUnit.DAYS);
+		LocalDateTime localDateTime = LocalDateTime.of(2023, 3, 28, 13, 30, 0);
+		ZonedDateTime zonedDateTime = localDateTime.atZone(ZoneId.systemDefault());
+		Instant issuedAt = Instant.ofEpochMilli(zonedDateTime.toInstant().toEpochMilli());
+		Instant expiresAt = issuedAt.plus(100, ChronoUnit.YEARS);
 		// @formatter:off
 		OAuth2AccessToken accessToken = new OAuth2AccessToken(OAuth2AccessToken.TokenType.BEARER, ACCESS_TOKEN_VALUE, issuedAt, expiresAt);
-		OAuth2RefreshToken refreshToken = new OAuth2RefreshToken(REFRESH_TOKEN_VALUE, Instant.now().plus(2, ChronoUnit.DAYS));
+		OAuth2RefreshToken refreshToken = new OAuth2RefreshToken(REFRESH_TOKEN_VALUE, issuedAt.plus(200, ChronoUnit.YEARS));
 		// @formatter:on
 
 		OAuth2Authorization authorization = OAuth2Authorization.withRegisteredClient(registeredClient)
