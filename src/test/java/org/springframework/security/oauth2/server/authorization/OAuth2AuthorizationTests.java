@@ -149,7 +149,8 @@ class OAuth2AuthorizationTests {
 		OAuth2Authorization.Builder builder = OAuth2Authorization.withRegisteredClient(registeredClient());
 		String id = toString(readValue.get("id"));
 		String principalName = toString(readValue.get("principalName"));
-		String authorizationGrantType = toString(readValue.get("authorizationGrantType"));
+		AuthorizationGrantType authorizationGrantType = toAuthorizationGrantType(
+				readValue.get("authorizationGrantType"));
 		Set<String> authorizedScopes = Collections.emptySet();
 		String authorizedScopesString = toString(readValue.get("authorizedScopes"));
 		if (authorizedScopesString != null) {
@@ -162,7 +163,7 @@ class OAuth2AuthorizationTests {
 
 		builder.id(id)
 			.principalName(principalName)
-			.authorizationGrantType(new AuthorizationGrantType(authorizationGrantType))
+			.authorizationGrantType(authorizationGrantType)
 			.authorizedScopes(authorizedScopes)
 			.attributes((attrs) -> attrs.putAll(attributes));
 
@@ -295,6 +296,15 @@ class OAuth2AuthorizationTests {
 			.state(STATE)
 			.additionalParameters(new HashMap<>())
 			.build();
+	}
+
+	private AuthorizationGrantType toAuthorizationGrantType(Object object) throws JsonProcessingException {
+		if (object instanceof Map) {
+			@SuppressWarnings("unchecked")
+			Map<String, String> map = (Map<String, String>) object;
+			return new AuthorizationGrantType(map.get("value"));
+		}
+		return null;
 	}
 
 	private String toString(Object object) {
