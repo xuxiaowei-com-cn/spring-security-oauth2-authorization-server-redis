@@ -26,6 +26,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.jdbc.core.JdbcTemplate;
+import org.springframework.security.oauth2.core.OAuth2AccessToken;
 import org.springframework.security.oauth2.server.authorization.client.JdbcRegisteredClientRepository;
 import org.springframework.security.oauth2.server.authorization.properties.SpringAuthorizationServerRedisProperties;
 import org.springframework.stereotype.Service;
@@ -87,12 +88,36 @@ public class RedisOAuth2AuthorizationService implements OAuth2AuthorizationServi
 
 	@Override
 	public void save(OAuth2Authorization authorization) {
+		if (authorization != null) {
 
+			long authorizationTimeout = springAuthorizationServerRedisProperties.getAuthorizationTimeout();
+
+			set(authorization, authorizationTimeout, TimeUnit.SECONDS);
+
+			jdbcOAuth2AuthorizationService.save(authorization);
+		}
 	}
 
 	@Override
 	public void remove(OAuth2Authorization authorization) {
+		if (authorization != null) {
 
+			String prefix = springAuthorizationServerRedisProperties.getPrefix();
+
+			redisTemplate.delete(prefix + OAUTH2_AUTHORIZATION_ID + authorization.getId());
+
+			OAuth2Authorization.Token<OAuth2AccessToken> accessToken = authorization.getAccessToken();
+			if (accessToken != null) {
+				OAuth2AccessToken token = accessToken.getToken();
+				if (token != null) {
+					String tokenType = token.getTokenType().getValue();
+					String tokenValue = token.getTokenValue();
+					redisTemplate.delete(prefix + OAUTH2_AUTHORIZATION_TOKEN_TYPE + tokenType + ":" + tokenValue);
+				}
+			}
+
+			jdbcOAuth2AuthorizationService.remove(authorization);
+		}
 	}
 
 	@Override
@@ -134,20 +159,53 @@ public class RedisOAuth2AuthorizationService implements OAuth2AuthorizationServi
 		String tokenTypeValue = tokenType.getValue();
 
 		// @formatter:off
-		OAuth2Authorization oauth2Authorization = redisTemplate.opsForValue().get(prefix + OAUTH2_AUTHORIZATION_TOKEN_TYPE + tokenTypeValue + ":" + token);
+		OAuth2Authorization oauth2AuthorizationByRedis = redisTemplate.opsForValue().get(prefix + OAUTH2_AUTHORIZATION_TOKEN_TYPE + tokenTypeValue + ":" + token);
 		// @formatter:on
 
-		return null;
+		OAuth2Authorization oauth2AuthorizationResult;
+		OAuth2Authorization oauth2AuthorizationByDatabase;
+
+		if (oauth2AuthorizationByRedis == null) {
+			oauth2AuthorizationByDatabase = jdbcOAuth2AuthorizationService.findByToken(token, tokenType);
+			log.debug("根据 token：{}、tokenType：{} 直接查询数据库中的客户：{}", token, tokenType, oauth2AuthorizationByDatabase);
+
+			if (oauth2AuthorizationByDatabase != null) {
+
+				long authorizationTimeout = springAuthorizationServerRedisProperties.getAuthorizationTimeout();
+
+				set(oauth2AuthorizationByDatabase, authorizationTimeout, TimeUnit.SECONDS);
+			}
+
+			oauth2AuthorizationResult = oauth2AuthorizationByDatabase;
+		}
+		else {
+			log.debug("根据 token：{}、tokenType：{} 直接查询Redis中的客户：{}", token, tokenType, oauth2AuthorizationByRedis);
+			oauth2AuthorizationResult = oauth2AuthorizationByRedis;
+		}
+
+		return oauth2AuthorizationResult;
 	}
 
-	public void set(@NonNull OAuth2Authorization oauth2Authorization, long timeout, TimeUnit unit) {
+	public void set(@NonNull OAuth2Authorization authorization, long timeout, TimeUnit unit) {
 
 		String prefix = springAuthorizationServerRedisProperties.getPrefix();
 
 		// @formatter:off
-		redisTemplate.opsForValue().set(prefix + OAUTH2_AUTHORIZATION_ID + oauth2Authorization.getId(), oauth2Authorization, timeout, unit);
-		redisTemplate.opsForValue().set(prefix + OAUTH2_AUTHORIZATION_TOKEN_TYPE + oauth2Authorization.getAccessToken().getToken().getTokenValue(), oauth2Authorization, timeout, unit);
+		redisTemplate.opsForValue().set(prefix + OAUTH2_AUTHORIZATION_ID + authorization.getId(), authorization, timeout, unit);
 		// @formatter:on
+
+		OAuth2Authorization.Token<OAuth2AccessToken> accessToken = authorization.getAccessToken();
+		if (accessToken != null) {
+			OAuth2AccessToken token = accessToken.getToken();
+			if (token != null) {
+				String tokenType = token.getTokenType().getValue();
+				String tokenValue = token.getTokenValue();
+				redisTemplate.opsForValue()
+					.set(prefix + OAUTH2_AUTHORIZATION_TOKEN_TYPE + tokenType + ":" + tokenValue, authorization,
+							timeout, unit);
+			}
+		}
+
 	}
 
 }

@@ -211,7 +211,7 @@ public class H2DataSourceTestConfiguration {
 		log.info("检查数据库初始化结果 OAuth2Authorization：{}", objectWriter.writeValueAsString(auth2AuthorizationByDatabase));
 	}
 
-	private Authentication principal() {
+	public static Authentication principal() {
 		List<GrantedAuthority> authorities = new ArrayList<>();
 		SimpleGrantedAuthority authority = new SimpleGrantedAuthority("student");
 		authorities.add(authority);
@@ -219,7 +219,7 @@ public class H2DataSourceTestConfiguration {
 		return new UsernamePasswordAuthenticationToken(user, null);
 	}
 
-	private OAuth2AuthorizationRequest authorizationRequest(RegisteredClient registeredClient) {
+	public static OAuth2AuthorizationRequest authorizationRequest(RegisteredClient registeredClient) {
 		return OAuth2AuthorizationRequest.authorizationCode()
 			.authorizationUri("http://192.168.1.101:1401/oauth2/authorize")
 			.clientId(registeredClient.getClientId())

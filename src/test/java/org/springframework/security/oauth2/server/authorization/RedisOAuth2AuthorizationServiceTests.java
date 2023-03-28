@@ -30,15 +30,26 @@ import org.springframework.boot.autoconfigure.data.redis.RedisAutoConfiguration;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.context.annotation.Import;
 import org.springframework.jdbc.core.JdbcTemplate;
+import org.springframework.security.oauth2.core.AuthorizationGrantType;
+import org.springframework.security.oauth2.core.OAuth2AccessToken;
+import org.springframework.security.oauth2.core.OAuth2RefreshToken;
+import org.springframework.security.oauth2.core.endpoint.OAuth2AuthorizationRequest;
 import org.springframework.security.oauth2.server.authorization.client.JdbcRegisteredClientRepository;
+import org.springframework.security.oauth2.server.authorization.client.RegisteredClient;
 import org.springframework.security.oauth2.server.authorization.configuration.RedisSpringAuthorizationServerConfiguration;
 import org.springframework.security.oauth2.server.authorization.properties.SpringAuthorizationServerRedisProperties;
 import org.springframework.security.oauth2.server.authorization.utils.ObjectMapperUtils;
 
 import javax.sql.DataSource;
+import java.security.Principal;
+import java.time.Instant;
+import java.time.LocalDateTime;
+import java.time.ZoneId;
+import java.time.ZonedDateTime;
+import java.time.temporal.ChronoUnit;
+import java.util.UUID;
 
-import static org.springframework.security.oauth2.server.authorization.H2DataSourceTestConfiguration.AUTHORIZATION_ID;
-import static org.springframework.security.oauth2.server.authorization.H2DataSourceTestConfiguration.ID;
+import static org.springframework.security.oauth2.server.authorization.H2DataSourceTestConfiguration.*;
 
 /**
  * {@link OAuth2AuthorizationService} 测试类
@@ -55,25 +66,79 @@ class RedisOAuth2AuthorizationServiceTests {
 	@Autowired
 	private RedisOAuth2AuthorizationService redisOAuth2AuthorizationService;
 
+	private JdbcRegisteredClientRepository jdbcRegisteredClientRepository;
+
 	private JdbcOAuth2AuthorizationService jdbcOAuth2AuthorizationService;
 
 	@Autowired
 	public void setJdbcOAuth2AuthorizationService(DataSource dataSource) {
 		JdbcTemplate jdbcTemplate = new JdbcTemplate(dataSource);
 		// @formatter:off
-		JdbcRegisteredClientRepository jdbcRegisteredClientRepository = new JdbcRegisteredClientRepository(jdbcTemplate);
+		this.jdbcRegisteredClientRepository = new JdbcRegisteredClientRepository(jdbcTemplate);
 		this.jdbcOAuth2AuthorizationService = new JdbcOAuth2AuthorizationService(jdbcTemplate, jdbcRegisteredClientRepository);
 		// @formatter:on
 	}
 
 	@Test
-	void save() {
+	void save() throws JsonProcessingException {
+		RegisteredClient registeredClient = jdbcRegisteredClientRepository.findById(ID);
+		assert registeredClient != null;
 
+		LocalDateTime localDateTime = LocalDateTime.of(2023, 3, 28, 13, 30, 0);
+		ZonedDateTime zonedDateTime = localDateTime.atZone(ZoneId.systemDefault());
+		Instant issuedAt = Instant.ofEpochMilli(zonedDateTime.toInstant().toEpochMilli());
+		Instant expiresAt = issuedAt.plus(3650, ChronoUnit.DAYS);
+		// @formatter:off
+		OAuth2AccessToken accessToken = new OAuth2AccessToken(OAuth2AccessToken.TokenType.BEARER, ACCESS_TOKEN_VALUE, issuedAt, expiresAt);
+		OAuth2RefreshToken refreshToken = new OAuth2RefreshToken(REFRESH_TOKEN_VALUE, issuedAt.plus(3650, ChronoUnit.DAYS));
+		// @formatter:on
+
+		String id = UUID.randomUUID().toString();
+
+		OAuth2Authorization authorization = OAuth2Authorization.withRegisteredClient(registeredClient)
+			.id(id)
+			.principalName("zhang-san")
+			.authorizationGrantType(AuthorizationGrantType.AUTHORIZATION_CODE)
+			.accessToken(accessToken)
+			.refreshToken(refreshToken)
+			.attribute(Principal.class.getName(), principal())
+			.attribute(OAuth2AuthorizationRequest.class.getName(), authorizationRequest(registeredClient))
+			.build();
+
+		redisOAuth2AuthorizationService.save(authorization);
+
+		ObjectMapper objectMapper = ObjectMapperUtils.redis();
+		ObjectWriter objectWriter = objectMapper.writerWithDefaultPrettyPrinter();
+
+		OAuth2Authorization auth2AuthorizationByDatabase = jdbcOAuth2AuthorizationService.findById(id);
+		log.info("直接查询数据库中的保存的结果：{}", objectWriter.writeValueAsString(auth2AuthorizationByDatabase));
 	}
 
 	@Test
 	void remove() {
+		String id = "9db42fc5-8454-4b34-9c1a-660183820504";
+		String token = "d8e3e7c0-3ca0-4797-a30b-51385a47f921";
 
+		LocalDateTime localDateTime = LocalDateTime.of(2023, 3, 28, 13, 30, 0);
+		ZonedDateTime zonedDateTime = localDateTime.atZone(ZoneId.systemDefault());
+		Instant issuedAt = Instant.ofEpochMilli(zonedDateTime.toInstant().toEpochMilli());
+		Instant expiresAt = issuedAt.plus(3650, ChronoUnit.DAYS);
+		// @formatter:off
+		OAuth2AccessToken accessToken = new OAuth2AccessToken(OAuth2AccessToken.TokenType.BEARER, token, issuedAt, expiresAt);
+		// @formatter:on
+
+		RegisteredClient registeredClient = RegisteredClient.withId(ID)
+			.clientId(CLIENT_ID)
+			.authorizationGrantType(AuthorizationGrantType.AUTHORIZATION_CODE)
+			.redirectUri("http://127.0.0.1:1401/code")
+			.build();
+		OAuth2Authorization authorization = OAuth2Authorization.withRegisteredClient(registeredClient)
+			.id(id)
+			.principalName("zhang-san")
+			.authorizationGrantType(AuthorizationGrantType.AUTHORIZATION_CODE)
+			.accessToken(accessToken)
+			.build();
+		redisOAuth2AuthorizationService.remove(authorization);
 	}
 
 	@Test

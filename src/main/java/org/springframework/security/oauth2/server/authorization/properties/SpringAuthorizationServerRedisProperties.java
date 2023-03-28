@@ -45,4 +45,9 @@ public class SpringAuthorizationServerRedisProperties {
 	 */
 	private long registeredClientTimeout = 3000000;
 
+	/**
+	 * registered client Redis 超时时间，单位为秒
+	 */
+	private long authorizationTimeout = 3000000;
+
 }
