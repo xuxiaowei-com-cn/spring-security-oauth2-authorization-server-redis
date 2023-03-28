@@ -184,10 +184,10 @@ public class H2DataSourceTestConfiguration {
 		LocalDateTime localDateTime = LocalDateTime.of(2023, 3, 28, 13, 30, 0);
 		ZonedDateTime zonedDateTime = localDateTime.atZone(ZoneId.systemDefault());
 		Instant issuedAt = Instant.ofEpochMilli(zonedDateTime.toInstant().toEpochMilli());
-		Instant expiresAt = issuedAt.plus(100, ChronoUnit.YEARS);
+		Instant expiresAt = issuedAt.plus(3650, ChronoUnit.DAYS);
 		// @formatter:off
 		OAuth2AccessToken accessToken = new OAuth2AccessToken(OAuth2AccessToken.TokenType.BEARER, ACCESS_TOKEN_VALUE, issuedAt, expiresAt);
-		OAuth2RefreshToken refreshToken = new OAuth2RefreshToken(REFRESH_TOKEN_VALUE, issuedAt.plus(200, ChronoUnit.YEARS));
+		OAuth2RefreshToken refreshToken = new OAuth2RefreshToken(REFRESH_TOKEN_VALUE, issuedAt.plus(3650, ChronoUnit.DAYS));
 		// @formatter:on
 
 		OAuth2Authorization authorization = OAuth2Authorization.withRegisteredClient(registeredClient)
