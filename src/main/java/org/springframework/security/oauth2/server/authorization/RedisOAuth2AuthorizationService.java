@@ -110,11 +110,19 @@ public class RedisOAuth2AuthorizationService implements OAuth2AuthorizationServi
 			OAuth2Authorization.Token<OAuth2AccessToken> accessToken = authorization.getAccessToken();
 			if (accessToken != null) {
 				OAuth2AccessToken token = accessToken.getToken();
-				if (token != null) {
-					String tokenType = token.getTokenType().getValue();
-					String tokenValue = token.getTokenValue();
-					redisTemplate.delete(prefix + OAUTH2_AUTHORIZATION_TOKEN_TYPE + tokenType + ":" + tokenValue);
-				}
+				String tokenValue = token.getTokenValue();
+				// @formatter:off
+				redisTemplate.delete(prefix + OAUTH2_AUTHORIZATION_TOKEN_TYPE + OAuth2TokenType.ACCESS_TOKEN.getValue() + ":" + tokenValue);
+				// @formatter:on
+			}
+
+			OAuth2Authorization.Token<OAuth2RefreshToken> refreshToken = authorization.getRefreshToken();
+			if (refreshToken != null) {
+				OAuth2RefreshToken token = refreshToken.getToken();
+				String tokenValue = token.getTokenValue();
+				// @formatter:off
+				redisTemplate.delete(prefix + OAUTH2_AUTHORIZATION_TOKEN_TYPE + OAuth2TokenType.REFRESH_TOKEN.getValue() + ":" + tokenValue);
+				// @formatter:on
 			}
 
 			jdbcOAuth2AuthorizationService.remove(authorization);

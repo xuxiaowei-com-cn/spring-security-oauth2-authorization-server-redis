@@ -34,8 +34,10 @@ import com.fasterxml.jackson.datatype.jsr310.ser.LocalTimeSerializer;
 import org.springframework.security.oauth2.core.AuthorizationGrantType;
 import org.springframework.security.oauth2.core.ClientAuthenticationMethod;
 import org.springframework.security.oauth2.server.authorization.OAuth2Authorization;
+import org.springframework.security.oauth2.server.authorization.OAuth2AuthorizationConsent;
 import org.springframework.security.oauth2.server.authorization.client.RegisteredClient;
 import org.springframework.security.oauth2.server.authorization.deserializer.*;
+import org.springframework.security.oauth2.server.authorization.jackson2.OAuth2AuthorizationJackson2Module;
 import org.springframework.security.oauth2.server.authorization.settings.ClientSettings;
 import org.springframework.security.oauth2.server.authorization.settings.TokenSettings;
 
@@ -89,6 +91,9 @@ public class ObjectMapperUtils {
 		simpleModule.addDeserializer(ClientSettings.class, new ClientSettingsDeserializer());
 		simpleModule.addDeserializer(TokenSettings.class, new TokenSettingsDeserializer());
 		simpleModule.addDeserializer(OAuth2Authorization.class, new OAuth2AuthorizationDeserializer());
+		simpleModule.addDeserializer(OAuth2AuthorizationConsent.class, new OAuth2AuthorizationConsentDeserializer());
+
+		OAuth2AuthorizationJackson2Module auth2AuthorizationJackson2Module = new OAuth2AuthorizationJackson2Module();
 
 		// 用于注册可以扩展该映射器提供的功能的模块的方法; 例如，通过添加自定义序列化程序和反序列化程序的提供程序。
 		objectMapper.registerModules(javaTimeModule, simpleModule);
