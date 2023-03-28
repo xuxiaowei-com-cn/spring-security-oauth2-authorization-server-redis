@@ -71,8 +71,8 @@ class RedisOAuth2AuthorizationConsentServiceTests {
 		SimpleGrantedAuthority authority = new SimpleGrantedAuthority("student");
 		String principalName = "zhang-san";
 		OAuth2AuthorizationConsent.Builder builder = OAuth2AuthorizationConsent.withId(ID, principalName)
-				.authority(authority)
-				.scope("admin");
+			.authority(authority)
+			.scope("admin");
 		OAuth2AuthorizationConsent authorizationConsent = builder.build();
 		redisOAuth2AuthorizationConsentService.remove(authorizationConsent);
 	}

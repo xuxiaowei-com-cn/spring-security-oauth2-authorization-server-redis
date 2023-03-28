@@ -9,9 +9,9 @@ package org.springframework.security.oauth2.server.authorization.deserializer;
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
- * 
+ *
  *      http://www.apache.org/licenses/LICENSE-2.0
- * 
+ *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -100,26 +100,27 @@ public class OAuth2AuthorizationDeserializer extends StdDeserializer<OAuth2Autho
 		}
 
 		// OAuth2AuthorizationRequest oauth2AuthorizationRequest = null;
-//		if (AuthorizationGrantType.AUTHORIZATION_CODE.equals(authorizationGrantType)) {
-//
-//			Object scopesObj = oauth2AuthorizationRequestMap.get("scopes");
-//			Set<String> scopes = new HashSet<>();
-//			if (scopesObj instanceof List) {
-//				@SuppressWarnings("all")
-//				List<String> scopesList = (List) scopesObj;
-//				scopes.addAll(scopesList);
-//			}
-//
-//			OAuth2AuthorizationRequest.Builder oauth2AuthorizationRequestBuilder = OAuth2AuthorizationRequest
-//				.authorizationCode()
-//				.authorizationUri(oauth2AuthorizationRequestMap.get("authorizationUri").toString())
-//				.clientId(clientId)
-//				.redirectUri(oauth2AuthorizationRequestMap.get("redirectUri").toString())
-//				.scopes(scopes)
-//				.state(oauth2AuthorizationRequestMap.get("state").toString());
-//
-//			 oauth2AuthorizationRequest = oauth2AuthorizationRequestBuilder.build();
-//		}
+		// if (AuthorizationGrantType.AUTHORIZATION_CODE.equals(authorizationGrantType)) {
+		//
+		// Object scopesObj = oauth2AuthorizationRequestMap.get("scopes");
+		// Set<String> scopes = new HashSet<>();
+		// if (scopesObj instanceof List) {
+		// @SuppressWarnings("all")
+		// List<String> scopesList = (List) scopesObj;
+		// scopes.addAll(scopesList);
+		// }
+		//
+		// OAuth2AuthorizationRequest.Builder oauth2AuthorizationRequestBuilder =
+		// OAuth2AuthorizationRequest
+		// .authorizationCode()
+		// .authorizationUri(oauth2AuthorizationRequestMap.get("authorizationUri").toString())
+		// .clientId(clientId)
+		// .redirectUri(oauth2AuthorizationRequestMap.get("redirectUri").toString())
+		// .scopes(scopes)
+		// .state(oauth2AuthorizationRequestMap.get("state").toString());
+		//
+		// oauth2AuthorizationRequest = oauth2AuthorizationRequestBuilder.build();
+		// }
 
 		String redirectUri = oauth2AuthorizationRequestMap.get("redirectUri").toString();
 
