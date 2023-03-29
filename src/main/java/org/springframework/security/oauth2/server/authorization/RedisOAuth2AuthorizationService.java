@@ -133,6 +133,7 @@ public class RedisOAuth2AuthorizationService implements OAuth2AuthorizationServi
 	public OAuth2Authorization findById(String id) {
 
 		String prefix = springAuthorizationServerRedisProperties.getPrefix();
+		long authorizationTimeout = springAuthorizationServerRedisProperties.getAuthorizationTimeout();
 
 		// @formatter:off
 		OAuth2Authorization oauth2AuthorizationRedis = redisTemplate.opsForValue().get(prefix + OAUTH2_AUTHORIZATION_ID + id);
@@ -146,7 +147,7 @@ public class RedisOAuth2AuthorizationService implements OAuth2AuthorizationServi
 			log.debug("根据 id：{} 直接查询数据库中的授权：{}", id, oauth2AuthorizationByDatabase);
 
 			if (oauth2AuthorizationByDatabase != null) {
-				set(oauth2AuthorizationByDatabase, 60, TimeUnit.MINUTES);
+				set(oauth2AuthorizationByDatabase, authorizationTimeout, TimeUnit.SECONDS);
 			}
 
 			oauth2AuthorizationResult = oauth2AuthorizationByDatabase;
@@ -208,9 +209,9 @@ public class RedisOAuth2AuthorizationService implements OAuth2AuthorizationServi
 			OAuth2AccessToken token = accessToken.getToken();
 			if (token != null) {
 				String tokenValue = token.getTokenValue();
-				redisTemplate.opsForValue()
-					.set(prefix + OAUTH2_AUTHORIZATION_TOKEN_TYPE + OAuth2TokenType.ACCESS_TOKEN.getValue() + ":"
-							+ tokenValue, authorization, timeout, unit);
+				// @formatter:off
+				redisTemplate.opsForValue().set(prefix + OAUTH2_AUTHORIZATION_TOKEN_TYPE + OAuth2TokenType.ACCESS_TOKEN.getValue() + ":" + tokenValue, authorization, timeout, unit);
+				// @formatter:on
 			}
 		}
 
@@ -219,9 +220,9 @@ public class RedisOAuth2AuthorizationService implements OAuth2AuthorizationServi
 			OAuth2RefreshToken token = refreshToken.getToken();
 			if (token != null) {
 				String tokenValue = token.getTokenValue();
-				redisTemplate.opsForValue()
-					.set(prefix + OAUTH2_AUTHORIZATION_TOKEN_TYPE + OAuth2TokenType.REFRESH_TOKEN.getValue() + ":"
-							+ tokenValue, authorization, timeout, unit);
+				// @formatter:off
+				redisTemplate.opsForValue().set(prefix + OAUTH2_AUTHORIZATION_TOKEN_TYPE + OAuth2TokenType.REFRESH_TOKEN.getValue() + ":" + tokenValue, authorization, timeout, unit);
+				// @formatter:on
 			}
 		}
 
