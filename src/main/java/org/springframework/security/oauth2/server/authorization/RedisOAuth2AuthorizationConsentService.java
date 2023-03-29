@@ -112,6 +112,7 @@ public class RedisOAuth2AuthorizationConsentService implements OAuth2Authorizati
 	@Override
 	public OAuth2AuthorizationConsent findById(String registeredClientId, String principalName) {
 		String prefix = springAuthorizationServerRedisProperties.getPrefix();
+		long authorizationTimeout = springAuthorizationServerRedisProperties.getAuthorizationTimeout();
 
 		// @formatter:off
 		OAuth2AuthorizationConsent oauth2AuthorizationConsentRedis = redisTemplate.opsForValue().get(prefix + OAUTH2_AUTHORIZATION_CONSENT + registeredClientId  + ":"+ principalName);
@@ -127,7 +128,7 @@ public class RedisOAuth2AuthorizationConsentService implements OAuth2Authorizati
 					oauth2AuthorizationByDatabase);
 
 			if (oauth2AuthorizationByDatabase != null) {
-				set(oauth2AuthorizationByDatabase, 60, TimeUnit.MINUTES);
+				set(oauth2AuthorizationByDatabase, authorizationTimeout, TimeUnit.SECONDS);
 			}
 
 			oauth2AuthorizationResult = oauth2AuthorizationByDatabase;
