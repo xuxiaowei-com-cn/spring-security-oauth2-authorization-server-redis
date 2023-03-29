@@ -22,11 +22,10 @@ package org.springframework.security.oauth2.server.authorization.deserializer;
 
 import com.fasterxml.jackson.core.JacksonException;
 import com.fasterxml.jackson.core.JsonParser;
-import com.fasterxml.jackson.core.TreeNode;
+import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.DeserializationContext;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.deser.std.StdDeserializer;
-import lombok.SneakyThrows;
 import org.springframework.security.oauth2.core.ClientAuthenticationMethod;
 
 import java.io.IOException;
@@ -51,20 +50,10 @@ public class ClientAuthenticationMethodDeserializer extends StdDeserializer<Clie
 	@Override
 	public ClientAuthenticationMethod deserialize(JsonParser p, DeserializationContext ctxt)
 			throws IOException, JacksonException {
-		TreeNode treeNode = p.getCodec().readTree(p);
-		return treeNodeToClientAuthenticationMethod(treeNode);
-	}
-
-	@SneakyThrows
-	public static ClientAuthenticationMethod treeNodeToClientAuthenticationMethod(TreeNode treeNode) {
-		String string = treeNode.toString();
 		ObjectMapper objectMapper = new ObjectMapper();
-		@SuppressWarnings("all")
-		Map<String, String> map = objectMapper.readValue(string, Map.class);
-		for (String value : map.values()) {
-			return new ClientAuthenticationMethod(value);
-		}
-		return null;
+		Map<String, String> map = objectMapper.readValue(p, new TypeReference<Map<String, String>>() {
+		});
+		return new ClientAuthenticationMethod(map.values().stream().findFirst().orElse(null));
 	}
 
 }
