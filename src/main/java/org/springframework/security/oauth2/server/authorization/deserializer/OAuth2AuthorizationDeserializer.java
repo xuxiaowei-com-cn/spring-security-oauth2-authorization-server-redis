@@ -20,9 +20,9 @@ package org.springframework.security.oauth2.server.authorization.deserializer;
  * #L%
  */
 
-import com.fasterxml.jackson.core.JacksonException;
 import com.fasterxml.jackson.core.JsonParser;
-import com.fasterxml.jackson.core.TreeNode;
+import com.fasterxml.jackson.core.JsonToken;
+import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.DeserializationContext;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.deser.std.StdDeserializer;
@@ -49,156 +49,79 @@ import java.util.Set;
  */
 public class OAuth2AuthorizationDeserializer extends StdDeserializer<OAuth2Authorization> {
 
-	public OAuth2AuthorizationDeserializer() {
-		this(null);
-	}
+	private static final ObjectMapper objectMapper = new ObjectMapper();
 
-	public OAuth2AuthorizationDeserializer(Class<?> vc) {
-		super(vc);
+	public OAuth2AuthorizationDeserializer() {
+		super(OAuth2Authorization.class);
 	}
 
 	@Override
-	public OAuth2Authorization deserialize(JsonParser p, DeserializationContext ctxt)
-			throws IOException, JacksonException {
-		ObjectMapper objectMapper = new ObjectMapper();
+	public OAuth2Authorization deserialize(JsonParser p, DeserializationContext ctxt) throws IOException {
 
-		TreeNode treeNode = p.getCodec().readTree(p);
+		RegisteredClient.Builder registeredClientBuilder = null;
+		AuthorizationGrantType authorizationGrantType = null;
+		String principalName = null;
+		OAuth2AccessToken accessToken = null;
+		OAuth2RefreshToken refreshToken = null;
+		Map<String, Object> attributesMap = null;
+		String id = null;
 
-		String treeNodeStr = treeNode.toString();
-		@SuppressWarnings("all")
-		Map<String, Object> treeNodeMap = objectMapper.readValue(treeNodeStr, Map.class);
+		JsonToken token;
+		while ((token = p.nextToken()) != null) {
+			if (JsonToken.FIELD_NAME.equals(token)) {
+				String fieldName = p.getCurrentName();
+				// 下一个值
+				p.nextToken();
+				switch (fieldName) {
+					case "registeredClientId":
+						registeredClientBuilder = RegisteredClient.withId(p.getText());
+						break;
+					case "authorizationGrantType":
+						authorizationGrantType = objectMapper.convertValue(
+								p.readValueAs(Map.class).values().iterator().next(), AuthorizationGrantType.class);
+						break;
+					case "principalName":
+						principalName = p.getText();
+						break;
+					case "attributes":
+						attributesMap = objectMapper.convertValue(p.readValueAsTree(),
+								new TypeReference<Map<String, Object>>() {
+								});
+						break;
+					case "accessToken":
+						accessToken = readAccessToken(p);
+						break;
+					case "refreshToken":
+						refreshToken = readRefreshToken(p);
+						break;
+					case "id":
+						id = p.getText();
+						break;
+					default:
 
-		RegisteredClient.Builder registeredClientBuilder = RegisteredClient
-			.withId(treeNodeMap.get("registeredClientId").toString());
-		String authorizationGrantTypeStr = treeNode.get("authorizationGrantType").toString();
-		String principalName = treeNodeMap.get("principalName").toString();
-
-		@SuppressWarnings("all")
-		Map<String, String> authorizationGrantTypeMap = objectMapper.readValue(authorizationGrantTypeStr, Map.class);
-
-		registeredClientBuilder.authorizationGrantTypes(authorizationGrantTypes -> {
-			for (String value : authorizationGrantTypeMap.values()) {
-				authorizationGrantTypes.add(new AuthorizationGrantType(value));
+				}
 			}
-		});
+		}
 
-		TreeNode attributes = treeNode.get("attributes");
-
-		Object oauth2AuthorizationRequestObj = attributes.get(OAuth2AuthorizationRequest.class.getName());
-		String oauth2AuthorizationRequestStr = oauth2AuthorizationRequestObj.toString();
-
-		@SuppressWarnings("all")
-		Map<String, Object> oauth2AuthorizationRequestMap = objectMapper.readValue(oauth2AuthorizationRequestStr,
+		Object oauth2AuthorizationRequestObj = attributesMap.get(OAuth2AuthorizationRequest.class.getName());
+		@SuppressWarnings("unchecked")
+		Map<String, Object> oauth2AuthorizationRequestMap = objectMapper.convertValue(oauth2AuthorizationRequestObj,
 				Map.class);
 
 		String clientId = oauth2AuthorizationRequestMap.get("clientId").toString();
 		registeredClientBuilder.clientId(clientId);
 
-		AuthorizationGrantType authorizationGrantType = null;
-		for (String value : authorizationGrantTypeMap.values()) {
-			authorizationGrantType = new AuthorizationGrantType(value);
-		}
-
-		// OAuth2AuthorizationRequest oauth2AuthorizationRequest = null;
-		// if (AuthorizationGrantType.AUTHORIZATION_CODE.equals(authorizationGrantType)) {
-		//
-		// Object scopesObj = oauth2AuthorizationRequestMap.get("scopes");
-		// Set<String> scopes = new HashSet<>();
-		// if (scopesObj instanceof List) {
-		// @SuppressWarnings("all")
-		// List<String> scopesList = (List) scopesObj;
-		// scopes.addAll(scopesList);
-		// }
-		//
-		// OAuth2AuthorizationRequest.Builder oauth2AuthorizationRequestBuilder =
-		// OAuth2AuthorizationRequest
-		// .authorizationCode()
-		// .authorizationUri(oauth2AuthorizationRequestMap.get("authorizationUri").toString())
-		// .clientId(clientId)
-		// .redirectUri(oauth2AuthorizationRequestMap.get("redirectUri").toString())
-		// .scopes(scopes)
-		// .state(oauth2AuthorizationRequestMap.get("state").toString());
-		//
-		// oauth2AuthorizationRequest = oauth2AuthorizationRequestBuilder.build();
-		// }
-
 		String redirectUri = oauth2AuthorizationRequestMap.get("redirectUri").toString();
-
 		registeredClientBuilder.redirectUri(redirectUri);
+
+		final AuthorizationGrantType finalAuthorizationGrantType = authorizationGrantType;
+		registeredClientBuilder.authorizationGrantTypes(authorizationGrantTypes -> {
+			authorizationGrantTypes.add(finalAuthorizationGrantType);
+		});
 
 		RegisteredClient registeredClient = registeredClientBuilder.build();
 
-		OAuth2AccessToken accessToken = null;
-		Object accessTokenObj = treeNodeMap.get("accessToken");
-		if (accessTokenObj instanceof Map) {
-			@SuppressWarnings("all")
-			Map<String, Object> accessTokenMap = (Map) accessTokenObj;
-			Object tokenObj = accessTokenMap.get("token");
-			if (tokenObj instanceof Map) {
-				@SuppressWarnings("all")
-				Map<String, Object> tokenMap = (Map) tokenObj;
-				String tokenValue = tokenMap.get("tokenValue").toString();
-				Object tokenTypeObj = tokenMap.get("tokenType");
-
-				OAuth2AccessToken.TokenType tokenType = null;
-				if (tokenTypeObj instanceof Map) {
-					@SuppressWarnings("all")
-					Map<String, String> tokenTypeMap = (Map) tokenTypeObj;
-					String value = tokenTypeMap.get("value");
-					if (OAuth2AccessToken.TokenType.BEARER.getValue().equals(value)) {
-						tokenType = OAuth2AccessToken.TokenType.BEARER;
-					}
-				}
-
-				String issuedAtStr = tokenMap.get("issuedAt").toString();
-				String expiresAtStr = tokenMap.get("expiresAt").toString();
-				Object scopesObj = tokenMap.get("scopes");
-
-				Set<String> scopes = new HashSet<>();
-				if (scopesObj instanceof List) {
-					@SuppressWarnings("all")
-					List<String> scopesList = (List) scopesObj;
-					scopes.addAll(scopesList);
-				}
-
-				Instant issuedAt = Instant.parse(issuedAtStr);
-				Instant expiresAt = Instant.parse(expiresAtStr);
-
-				assert tokenType != null;
-				accessToken = new OAuth2AccessToken(tokenType, tokenValue, issuedAt, expiresAt, scopes);
-			}
-		}
-
-		OAuth2RefreshToken refreshToken = null;
-		Object refreshTokenObj = treeNodeMap.get("refreshToken");
-		if (refreshTokenObj instanceof Map) {
-			@SuppressWarnings("all")
-			Map<String, Object> refreshTokenMap = (Map) refreshTokenObj;
-			Object tokenObj = refreshTokenMap.get("token");
-			if (tokenObj instanceof Map) {
-				@SuppressWarnings("all")
-				Map<String, String> tokenMap = (Map) tokenObj;
-				String tokenValue = tokenMap.get("tokenValue");
-				String issuedAtStr = tokenMap.get("issuedAt");
-				String expiresAtStr = tokenMap.get("expiresAt");
-
-				Instant issuedAt = Instant.parse(issuedAtStr);
-
-				Instant expiresAt;
-				if (expiresAtStr == null) {
-					expiresAt = null;
-				}
-				else {
-					expiresAt = Instant.parse(expiresAtStr);
-				}
-
-				refreshToken = new OAuth2RefreshToken(tokenValue, issuedAt, expiresAt);
-			}
-		}
-
-		String id = treeNodeMap.get("id").toString();
-
-		Object principalObj = attributes.get(Principal.class.getName());
+		Object principalObj = attributesMap.get(Principal.class.getName());
 
 		OAuth2Authorization.Builder oauth2AuthorizationBuilder = OAuth2Authorization
 			.withRegisteredClient(registeredClient)
@@ -211,6 +134,77 @@ public class OAuth2AuthorizationDeserializer extends StdDeserializer<OAuth2Autho
 			.attribute(Principal.class.getName(), principalObj);
 
 		return oauth2AuthorizationBuilder.build();
+	}
+
+	private OAuth2AccessToken readAccessToken(JsonParser p) throws IOException {
+		if (p.currentToken() == JsonToken.START_OBJECT) {
+			Map<String, Object> accessTokenMap = objectMapper.convertValue(p.readValueAsTree(),
+					new TypeReference<Map<String, Object>>() {
+					});
+			if (accessTokenMap.containsKey("token")) {
+				Map<String, Object> tokenMap = objectMapper.convertValue(accessTokenMap.get("token"),
+						new TypeReference<Map<String, Object>>() {
+						});
+
+				String tokenValue = tokenMap.get("tokenValue").toString();
+
+				OAuth2AccessToken.TokenType tokenType = null;
+
+				Object tokenTypeObj = tokenMap.get("tokenType");
+				if (tokenTypeObj instanceof Map) {
+					@SuppressWarnings("unchecked")
+					Map<String, String> tokenTypeMap = (Map<String, String>) tokenTypeObj;
+					String value = tokenTypeMap.get("value");
+					if (OAuth2AccessToken.TokenType.BEARER.getValue().equals(value)) {
+						tokenType = OAuth2AccessToken.TokenType.BEARER;
+					}
+				}
+
+				String issuedAtStr = tokenMap.get("issuedAt").toString();
+				String expiresAtStr = tokenMap.get("expiresAt").toString();
+				Object scopesObj = tokenMap.get("scopes");
+
+				Set<String> scopes = new HashSet<>();
+				if (scopesObj instanceof List) {
+					@SuppressWarnings("unchecked")
+					List<String> scopesList = (List<String>) scopesObj;
+					scopes.addAll(scopesList);
+				}
+
+				Instant issuedAt = Instant.parse(issuedAtStr);
+				Instant expiresAt = Instant.parse(expiresAtStr);
+
+				assert tokenType != null;
+				return new OAuth2AccessToken(tokenType, tokenValue, issuedAt, expiresAt, scopes);
+			}
+		}
+		return null;
+	}
+
+	private OAuth2RefreshToken readRefreshToken(JsonParser p) throws IOException {
+		if (p.currentToken() == JsonToken.START_OBJECT) {
+			Map<String, Object> refreshTokenMap = objectMapper.convertValue(p.readValueAsTree(),
+					new TypeReference<Map<String, Object>>() {
+					});
+			if (refreshTokenMap.containsKey("token")) {
+				Map<String, String> tokenMap = objectMapper.convertValue(refreshTokenMap.get("token"),
+						new TypeReference<Map<String, String>>() {
+						});
+
+				String tokenValue = tokenMap.get("tokenValue");
+
+				String issuedAtStr = tokenMap.get("issuedAt");
+				String expiresAtStr = tokenMap.get("expiresAt");
+
+				Instant issuedAt = Instant.parse(issuedAtStr);
+				Instant expiresAt = null;
+				if (expiresAtStr != null) {
+					expiresAt = Instant.parse(expiresAtStr);
+				}
+				return new OAuth2RefreshToken(tokenValue, issuedAt, expiresAt);
+			}
+		}
+		return null;
 	}
 
 }
