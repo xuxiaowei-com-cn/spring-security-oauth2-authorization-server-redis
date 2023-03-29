@@ -63,7 +63,7 @@ public class OAuth2AuthorizationConsentDeserializer extends StdDeserializer<OAut
 
 		OAuth2AuthorizationConsent.Builder builder = OAuth2AuthorizationConsent
 			.withId(registeredClientId, principalName)
-			.authorities(authorities::addAll);
+			.authorities(authoritiesConsumer -> authoritiesConsumer.addAll(authorities));
 
 		Object scopesObj = treeNodeMap.get("scopes");
 		if (scopesObj instanceof List) {
