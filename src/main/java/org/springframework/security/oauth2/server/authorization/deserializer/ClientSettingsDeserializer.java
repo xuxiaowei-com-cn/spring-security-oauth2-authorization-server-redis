@@ -22,11 +22,10 @@ package org.springframework.security.oauth2.server.authorization.deserializer;
 
 import com.fasterxml.jackson.core.JacksonException;
 import com.fasterxml.jackson.core.JsonParser;
-import com.fasterxml.jackson.core.TreeNode;
+import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.DeserializationContext;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.deser.std.StdDeserializer;
-import lombok.SneakyThrows;
 import org.springframework.security.oauth2.server.authorization.settings.ClientSettings;
 
 import java.io.IOException;
@@ -50,19 +49,12 @@ public class ClientSettingsDeserializer extends StdDeserializer<ClientSettings> 
 
 	@Override
 	public ClientSettings deserialize(JsonParser p, DeserializationContext ctxt) throws IOException, JacksonException {
-		TreeNode treeNode = p.getCodec().readTree(p);
-		Map<String, Object> settings = settingsTreeNodeToMap(treeNode);
+		ObjectMapper objectMapper = new ObjectMapper();
+		Map<String, Object> settings = objectMapper.readValue(p.getCodec().readTree(p).get("settings").toString(),
+				new TypeReference<Map<String, Object>>() {
+				});
 		ClientSettings.Builder builder = ClientSettings.withSettings(settings);
 		return builder.build();
-	}
-
-	@SneakyThrows
-	@SuppressWarnings("all")
-	public static Map<String, Object> settingsTreeNodeToMap(TreeNode treeNode) {
-		TreeNode settingsTreeNode = treeNode.get("settings");
-		String string = settingsTreeNode.toString();
-		ObjectMapper objectMapper = new ObjectMapper();
-		return objectMapper.readValue(string, Map.class);
 	}
 
 }
