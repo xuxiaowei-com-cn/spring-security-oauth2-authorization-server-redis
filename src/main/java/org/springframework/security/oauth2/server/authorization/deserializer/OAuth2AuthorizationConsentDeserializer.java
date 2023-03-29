@@ -3,6 +3,7 @@ package org.springframework.security.oauth2.server.authorization.deserializer;
 import com.fasterxml.jackson.core.JacksonException;
 import com.fasterxml.jackson.core.JsonParser;
 import com.fasterxml.jackson.core.TreeNode;
+import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.DeserializationContext;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.deser.std.StdDeserializer;
@@ -18,70 +19,55 @@ import java.util.Set;
 
 public class OAuth2AuthorizationConsentDeserializer extends StdDeserializer<OAuth2AuthorizationConsent> {
 
-	public OAuth2AuthorizationConsentDeserializer() {
-		this(null);
-	}
+	private final ObjectMapper objectMapper = new ObjectMapper();
 
-	public OAuth2AuthorizationConsentDeserializer(Class<?> vc) {
-		super(vc);
+	public OAuth2AuthorizationConsentDeserializer() {
+		super(OAuth2AuthorizationConsent.class);
 	}
 
 	@Override
+	@SuppressWarnings("unchecked")
 	public OAuth2AuthorizationConsent deserialize(JsonParser p, DeserializationContext ctxt)
 			throws IOException, JacksonException {
-		ObjectMapper objectMapper = new ObjectMapper();
-
 		TreeNode treeNode = p.getCodec().readTree(p);
 
 		String treeNodeStr = treeNode.toString();
-		@SuppressWarnings("all")
-		Map<String, Object> treeNodeMap = objectMapper.readValue(treeNodeStr, Map.class);
+		Map<String, Object> treeNodeMap = objectMapper.readValue(treeNodeStr, new TypeReference<Map<String, Object>>() {
+		});
 
 		String registeredClientId = treeNodeMap.get("registeredClientId").toString();
 		String principalName = treeNodeMap.get("principalName").toString();
 
-		Object authoritiesObj = treeNodeMap.get("authorities");
 		Set<GrantedAuthority> authorities = new HashSet<>();
-		toSetAuthorities(authoritiesObj, authorities);
-
-		Object scopesObj = treeNodeMap.get("scopes");
+		toSetAuthorities(treeNodeMap.get("authorities"), authorities);
 
 		OAuth2AuthorizationConsent.Builder builder = OAuth2AuthorizationConsent
 			.withId(registeredClientId, principalName)
-			.authorities(authoritySet -> {
-				authoritySet.addAll(authorities);
-			});
+			.authorities(authorities::addAll);
 
+		Object scopesObj = treeNodeMap.get("scopes");
 		if (scopesObj instanceof List) {
-			@SuppressWarnings("all")
 			List<Object> list = (List<Object>) scopesObj;
-			for (Object o : list) {
-				if (o instanceof Map) {
-					@SuppressWarnings("all")
-					Map<String, String> map = (Map<String, String>) o;
-					for (String s : map.values()) {
-						builder.scope(s);
-					}
-				}
-			}
+			list.stream()
+				.filter(o -> o instanceof Map)
+				.map(map -> (Map<String, String>) map)
+				.flatMap(map -> map.values().stream())
+				.forEach(builder::scope);
 		}
 
 		return builder.build();
 	}
 
+	@SuppressWarnings("unchecked")
 	private void toSetAuthorities(Object authoritiesObj, Set<GrantedAuthority> authorities) {
 		if (authoritiesObj instanceof List) {
-			@SuppressWarnings("all")
 			List<Object> list = (List<Object>) authoritiesObj;
-			for (Object o : list) {
-				if (o instanceof Map) {
-					@SuppressWarnings("all")
-					Map<String, String> map = (Map<String, String>) o;
-					for (String s : map.values()) {
-						authorities.add(new SimpleGrantedAuthority(s));
-					}
-				}
-			}
+			list.stream()
+				.filter(o -> o instanceof Map)
+				.map(map -> (Map<String, String>) map)
+				.flatMap(map -> map.values().stream())
+				.map(SimpleGrantedAuthority::new)
+				.forEach(authorities::add);
 		}
 	}
 
