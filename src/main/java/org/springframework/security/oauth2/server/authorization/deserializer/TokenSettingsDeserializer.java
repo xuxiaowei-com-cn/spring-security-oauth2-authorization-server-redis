@@ -23,6 +23,7 @@ package org.springframework.security.oauth2.server.authorization.deserializer;
 import com.fasterxml.jackson.core.JacksonException;
 import com.fasterxml.jackson.core.JsonParser;
 import com.fasterxml.jackson.core.TreeNode;
+import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.DeserializationContext;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.deser.std.StdDeserializer;
@@ -47,12 +48,10 @@ import static org.springframework.security.oauth2.server.authorization.settings.
  */
 public class TokenSettingsDeserializer extends StdDeserializer<TokenSettings> {
 
-	public TokenSettingsDeserializer() {
-		this(null);
-	}
+	private static final ObjectMapper objectMapper = new ObjectMapper();
 
-	public TokenSettingsDeserializer(Class<?> vc) {
-		super(vc);
+	public TokenSettingsDeserializer() {
+		super(TokenSettings.class);
 	}
 
 	@Override
@@ -68,19 +67,18 @@ public class TokenSettingsDeserializer extends StdDeserializer<TokenSettings> {
 	}
 
 	@SneakyThrows
-	@SuppressWarnings("all")
 	public static Map<String, Object> settingsTreeNodeToMap(TreeNode treeNode) {
 		TreeNode settingsTreeNode = treeNode.get("settings");
 		String string = settingsTreeNode.toString();
-		ObjectMapper objectMapper = new ObjectMapper();
-		return objectMapper.readValue(string, Map.class);
+		return objectMapper.readValue(string, new TypeReference<Map<String, Object>>() {
+		});
 	}
 
 	public static void accessTokenFormat(Map<String, Object> settings) {
 		Object accessTokenFormatObj = settings.get(ACCESS_TOKEN_FORMAT);
 		if (accessTokenFormatObj instanceof Map) {
 			settings.remove(ACCESS_TOKEN_FORMAT);
-			@SuppressWarnings("all")
+			@SuppressWarnings("unchecked")
 			Map<String, String> accessTokenFormatMap = (Map<String, String>) accessTokenFormatObj;
 			for (String value : accessTokenFormatMap.values()) {
 				settings.put(ACCESS_TOKEN_FORMAT, new OAuth2TokenFormat(value));
