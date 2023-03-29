@@ -53,6 +53,8 @@ import static org.springframework.security.oauth2.server.authorization.H2DataSou
 
 /**
  * {@link OAuth2AuthorizationService} 测试类
+ * <p>
+ * 请修改Redis密码
  *
  * @author xuxiaowei
  * @since 0.0.1
