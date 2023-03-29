@@ -68,9 +68,7 @@ public class RedisSpringAuthorizationServerConfiguration {
 
 		// 可以使用读写JSON
 		Jackson2JsonRedisSerializer<RegisteredClient> jackson2JsonRedisSerializer = new Jackson2JsonRedisSerializer<>(
-				RegisteredClient.class);
-
-		jackson2JsonRedisSerializer.setObjectMapper(ObjectMapperUtils.redis());
+				ObjectMapperUtils.redis(), RegisteredClient.class);
 
 		// Redis 字符串：键、值序列化
 		template.setKeySerializer(new StringRedisSerializer());
@@ -104,9 +102,7 @@ public class RedisSpringAuthorizationServerConfiguration {
 
 		// 可以使用读写JSON
 		Jackson2JsonRedisSerializer<OAuth2Authorization> jackson2JsonRedisSerializer = new Jackson2JsonRedisSerializer<>(
-				OAuth2Authorization.class);
-
-		jackson2JsonRedisSerializer.setObjectMapper(ObjectMapperUtils.redis());
+				ObjectMapperUtils.redis(), OAuth2Authorization.class);
 
 		// Redis 字符串：键、值序列化
 		template.setKeySerializer(new StringRedisSerializer());
@@ -140,9 +136,7 @@ public class RedisSpringAuthorizationServerConfiguration {
 
 		// 可以使用读写JSON
 		Jackson2JsonRedisSerializer<OAuth2AuthorizationConsent> jackson2JsonRedisSerializer = new Jackson2JsonRedisSerializer<>(
-				OAuth2AuthorizationConsent.class);
-
-		jackson2JsonRedisSerializer.setObjectMapper(ObjectMapperUtils.redis());
+				ObjectMapperUtils.redis(), OAuth2AuthorizationConsent.class);
 
 		// Redis 字符串：键、值序列化
 		template.setKeySerializer(new StringRedisSerializer());
