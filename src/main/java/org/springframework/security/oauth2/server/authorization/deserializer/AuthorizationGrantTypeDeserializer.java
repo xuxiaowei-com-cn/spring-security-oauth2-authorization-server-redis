@@ -22,11 +22,10 @@ package org.springframework.security.oauth2.server.authorization.deserializer;
 
 import com.fasterxml.jackson.core.JacksonException;
 import com.fasterxml.jackson.core.JsonParser;
-import com.fasterxml.jackson.core.TreeNode;
+import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.DeserializationContext;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.deser.std.StdDeserializer;
-import lombok.SneakyThrows;
 import org.springframework.security.oauth2.core.AuthorizationGrantType;
 
 import java.io.IOException;
@@ -51,20 +50,10 @@ public class AuthorizationGrantTypeDeserializer extends StdDeserializer<Authoriz
 	@Override
 	public AuthorizationGrantType deserialize(JsonParser p, DeserializationContext ctxt)
 			throws IOException, JacksonException {
-		TreeNode treeNode = p.getCodec().readTree(p);
-		return treeNodeToAuthorizationGrantType(treeNode);
-	}
-
-	@SneakyThrows
-	public static AuthorizationGrantType treeNodeToAuthorizationGrantType(TreeNode treeNode) {
-		String string = treeNode.toString();
 		ObjectMapper objectMapper = new ObjectMapper();
-		@SuppressWarnings("all")
-		Map<String, String> map = objectMapper.readValue(string, Map.class);
-		for (String value : map.values()) {
-			return new AuthorizationGrantType(value);
-		}
-		return null;
+		Map<String, String> map = objectMapper.readValue(p, new TypeReference<Map<String, String>>() {
+		});
+		return new AuthorizationGrantType(map.values().stream().findFirst().orElse(null));
 	}
 
 }
