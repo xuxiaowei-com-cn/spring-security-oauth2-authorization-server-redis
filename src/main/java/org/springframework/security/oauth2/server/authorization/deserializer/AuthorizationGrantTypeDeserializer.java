@@ -39,18 +39,15 @@ import java.util.Map;
  */
 public class AuthorizationGrantTypeDeserializer extends StdDeserializer<AuthorizationGrantType> {
 
-	public AuthorizationGrantTypeDeserializer() {
-		this(null);
-	}
+	public final ObjectMapper objectMapper = new ObjectMapper();
 
-	public AuthorizationGrantTypeDeserializer(Class<?> vc) {
-		super(vc);
+	public AuthorizationGrantTypeDeserializer() {
+		super(AuthorizationGrantType.class);
 	}
 
 	@Override
 	public AuthorizationGrantType deserialize(JsonParser p, DeserializationContext ctxt)
 			throws IOException, JacksonException {
-		ObjectMapper objectMapper = new ObjectMapper();
 		Map<String, String> map = objectMapper.readValue(p, new TypeReference<Map<String, String>>() {
 		});
 		return new AuthorizationGrantType(map.values().stream().findFirst().orElse(null));

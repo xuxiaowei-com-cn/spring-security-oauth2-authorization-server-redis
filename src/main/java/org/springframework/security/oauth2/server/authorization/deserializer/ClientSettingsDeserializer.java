@@ -39,17 +39,14 @@ import java.util.Map;
  */
 public class ClientSettingsDeserializer extends StdDeserializer<ClientSettings> {
 
-	public ClientSettingsDeserializer() {
-		this(null);
-	}
+	public final ObjectMapper objectMapper = new ObjectMapper();
 
-	public ClientSettingsDeserializer(Class<?> vc) {
-		super(vc);
+	public ClientSettingsDeserializer() {
+		super(ClientSettings.class);
 	}
 
 	@Override
 	public ClientSettings deserialize(JsonParser p, DeserializationContext ctxt) throws IOException, JacksonException {
-		ObjectMapper objectMapper = new ObjectMapper();
 		Map<String, Object> settings = objectMapper.readValue(p.getCodec().readTree(p).get("settings").toString(),
 				new TypeReference<Map<String, Object>>() {
 				});

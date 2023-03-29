@@ -39,18 +39,15 @@ import java.util.Map;
  */
 public class ClientAuthenticationMethodDeserializer extends StdDeserializer<ClientAuthenticationMethod> {
 
-	public ClientAuthenticationMethodDeserializer() {
-		this(null);
-	}
+	public final ObjectMapper objectMapper = new ObjectMapper();
 
-	public ClientAuthenticationMethodDeserializer(Class<?> vc) {
-		super(vc);
+	public ClientAuthenticationMethodDeserializer() {
+		super(ClientAuthenticationMethod.class);
 	}
 
 	@Override
 	public ClientAuthenticationMethod deserialize(JsonParser p, DeserializationContext ctxt)
 			throws IOException, JacksonException {
-		ObjectMapper objectMapper = new ObjectMapper();
 		Map<String, String> map = objectMapper.readValue(p, new TypeReference<Map<String, String>>() {
 		});
 		return new ClientAuthenticationMethod(map.values().stream().findFirst().orElse(null));
