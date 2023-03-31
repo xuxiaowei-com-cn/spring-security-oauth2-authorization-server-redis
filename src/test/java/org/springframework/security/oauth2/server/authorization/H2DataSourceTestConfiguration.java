@@ -40,6 +40,7 @@ import org.springframework.security.oauth2.core.ClientAuthenticationMethod;
 import org.springframework.security.oauth2.core.OAuth2AccessToken;
 import org.springframework.security.oauth2.core.OAuth2RefreshToken;
 import org.springframework.security.oauth2.core.endpoint.OAuth2AuthorizationRequest;
+import org.springframework.security.oauth2.jose.jws.MacAlgorithm;
 import org.springframework.security.oauth2.server.authorization.authentication.OAuth2AuthorizationCodeRequestAuthenticationProvider;
 import org.springframework.security.oauth2.server.authorization.client.JdbcRegisteredClientRepository;
 import org.springframework.security.oauth2.server.authorization.client.RegisteredClient;
@@ -156,6 +157,8 @@ public class H2DataSourceTestConfiguration {
 
 		ClientSettings.Builder clientSettingsBuilder = ClientSettings.builder();
 		clientSettingsBuilder.requireAuthorizationConsent(true);
+		// private_key_jwt、client_secret_jwt 算法
+		clientSettingsBuilder.tokenEndpointAuthenticationSigningAlgorithm(MacAlgorithm.HS256);
 		ClientSettings clientSettings = clientSettingsBuilder.build();
 
 		RegisteredClient registeredClient = registeredClientBuilder.clientSettings(clientSettings).build();
