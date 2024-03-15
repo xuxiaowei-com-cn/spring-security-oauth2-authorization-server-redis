@@ -5,7 +5,7 @@
     <parent>
         <groupId>org.springframework.boot</groupId>
         <artifactId>spring-boot-starter-parent</artifactId>
-        <version>2.7.18</version>
+        <version>3.2.3</version>
         <relativePath/> <!-- lookup parent from repository -->
     </parent>
     <groupId>cn.com.xuxiaowei.boot</groupId>
@@ -14,11 +14,11 @@
     <name>spring-security-oauth2-authorization-server-redis</name>
     <description>spring-security-oauth2-authorization-server 基于 Redis 的实现组件</description>
     <properties>
-        <java.version>8</java.version>
+        <java.version>17</java.version>
 
         <commons-lang3.version>3.14.0</commons-lang3.version>
 
-        <spring-security-oauth2-authorization-server.version>0.4.5</spring-security-oauth2-authorization-server.version>
+        <spring-security-oauth2-authorization-server.version>1.2.2</spring-security-oauth2-authorization-server.version>
 
         <git-commit-id-plugin.version>4.9.10</git-commit-id-plugin.version>
         <spring-javaformat-maven-plugin.version>0.0.41</spring-javaformat-maven-plugin.version>
