@@ -1,0 +1,13 @@
+spring:
+  redis:
+    host: ${SPRING_SECURITY_OAUTH2_AUTHORIZATION_SERVER_REDIS_HOST:127.0.0.1}
+    port: ${SPRING_SECURITY_OAUTH2_AUTHORIZATION_SERVER_REDIS_PORT:6379}
+    password: ${SPRING_SECURITY_OAUTH2_AUTHORIZATION_SERVER_REDIS_PASSWORD:xuxiaowei.com.cn}
+    database: ${SPRING_SECURITY_OAUTH2_AUTHORIZATION_SERVER_REDIS_DATABASE:0}
+
+---
+
+logging:
+  level:
+    org.springframework.jdbc: debug
+    cn.com.xuxiaowei.boot.oauth2: debug
