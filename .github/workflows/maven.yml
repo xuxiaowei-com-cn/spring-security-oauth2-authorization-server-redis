@@ -21,7 +21,7 @@ jobs:
 
     strategy:
       matrix:
-        redis-version: [ "redis:6.2.0", "redis:7.2.4" ]
+        redis-version: [ "redis:6.0.20", "redis:6.2.0", "redis:7.2.4" ]
 
     env:
       SPRING_SECURITY_OAUTH2_AUTHORIZATION_SERVER_REDIS_PASSWORD: ""
