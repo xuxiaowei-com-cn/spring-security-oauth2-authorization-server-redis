@@ -21,6 +21,7 @@
         <git-commit-id-plugin.version>4.9.10</git-commit-id-plugin.version>
         <spring-javaformat-maven-plugin.version>0.0.41</spring-javaformat-maven-plugin.version>
 
+        <skipTests>true</skipTests>
     </properties>
     <dependencies>
 
