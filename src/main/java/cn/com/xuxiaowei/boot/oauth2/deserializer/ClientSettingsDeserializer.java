@@ -19,7 +19,7 @@ import static org.springframework.security.oauth2.server.authorization.settings.
  * {@link ClientSettings} 反序列化
  *
  * @author xuxiaowei
- * @since 0.0.1
+ * @since 2.0.0
  */
 public class ClientSettingsDeserializer extends StdDeserializer<ClientSettings> {
 

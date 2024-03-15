@@ -15,7 +15,7 @@ import java.util.Map;
  * {@link AuthorizationGrantType} 反序列化
  *
  * @author xuxiaowei
- * @since 0.0.1
+ * @since 2.0.0
  */
 public class AuthorizationGrantTypeDeserializer extends StdDeserializer<AuthorizationGrantType> {
 
