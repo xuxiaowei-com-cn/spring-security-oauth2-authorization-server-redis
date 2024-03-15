@@ -1,16 +1,20 @@
 package cn.com.xuxiaowei.boot.oauth2.service;
 
+import cn.com.xuxiaowei.boot.oauth2.constant.RedisConstants;
 import cn.com.xuxiaowei.boot.oauth2.deserializer.AuthorizationGrantTypeDeserializer;
 import cn.com.xuxiaowei.boot.oauth2.deserializer.ClientAuthenticationMethodDeserializer;
 import cn.com.xuxiaowei.boot.oauth2.deserializer.ClientSettingsDeserializer;
 import cn.com.xuxiaowei.boot.oauth2.deserializer.TokenSettingsDeserializer;
 import cn.com.xuxiaowei.boot.oauth2.properties.SpringAuthorizationServerRedisProperties;
+import cn.com.xuxiaowei.boot.oauth2.utils.RedisUtils;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.module.SimpleModule;
 import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule;
 import lombok.Getter;
 import lombok.Setter;
 import lombok.SneakyThrows;
+import lombok.extern.slf4j.Slf4j;
+import org.apache.commons.lang3.StringUtils;
 import org.springframework.data.redis.core.StringRedisTemplate;
 import org.springframework.jdbc.core.JdbcOperations;
 import org.springframework.security.oauth2.core.AuthorizationGrantType;
@@ -27,6 +31,7 @@ import java.util.concurrent.TimeUnit;
  * @author xuxiaowei
  * @since 2.0.0
  */
+@Slf4j
 public class RedisRegisteredClientRepository implements RegisteredClientRepository {
 
 	private final SpringAuthorizationServerRedisProperties properties;
@@ -81,7 +86,23 @@ public class RedisRegisteredClientRepository implements RegisteredClientReposito
 
 		String idKey = idKey(id);
 
-		String json = stringRedisTemplate.opsForValue().getAndExpire(idKey, timeout, TimeUnit.SECONDS);
+		String redisVersion = RedisUtils.redisVersion(stringRedisTemplate);
+		int compare = StringUtils.compare(redisVersion, RedisConstants.GETDEL_VERSION);
+
+		String json;
+
+		if (compare < 0) {
+			log.warn("警告：Redis 版本低于 {}，不支持 GETEX（getAndExpire）命令", RedisConstants.GETEX_VERSION);
+
+			json = stringRedisTemplate.opsForValue().get(idKey);
+
+			if (json != null) {
+				stringRedisTemplate.expire(idKey, timeout, TimeUnit.SECONDS);
+			}
+		}
+		else {
+			json = stringRedisTemplate.opsForValue().getAndExpire(idKey, timeout, TimeUnit.SECONDS);
+		}
 
 		RegisteredClient registeredClient;
 
@@ -115,7 +136,23 @@ public class RedisRegisteredClientRepository implements RegisteredClientReposito
 
 		String clientIdKey = clientIdKey(clientId);
 
-		String json = stringRedisTemplate.opsForValue().getAndExpire(clientIdKey, timeout, TimeUnit.SECONDS);
+		String redisVersion = RedisUtils.redisVersion(stringRedisTemplate);
+		int compare = StringUtils.compare(redisVersion, RedisConstants.GETDEL_VERSION);
+
+		String json;
+
+		if (compare < 0) {
+			log.warn("警告：Redis 版本低于 {}，不支持 GETEX（getAndExpire）命令", RedisConstants.GETEX_VERSION);
+
+			json = stringRedisTemplate.opsForValue().get(clientIdKey);
+
+			if (json != null) {
+				stringRedisTemplate.expire(clientIdKey, timeout, TimeUnit.SECONDS);
+			}
+		}
+		else {
+			json = stringRedisTemplate.opsForValue().getAndExpire(clientIdKey, timeout, TimeUnit.SECONDS);
+		}
 
 		RegisteredClient registeredClient;
 
