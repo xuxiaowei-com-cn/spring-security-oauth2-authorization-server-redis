@@ -77,8 +77,13 @@ public class TokenSettingsDeserializer extends StdDeserializer<TokenSettings> {
 	}
 
 	public static void duration(Map<String, Object> settings) {
-		List<String> list = Arrays.asList(AUTHORIZATION_CODE_TIME_TO_LIVE, ACCESS_TOKEN_TIME_TO_LIVE,
-				REFRESH_TOKEN_TIME_TO_LIVE);
+		// @formatter:off
+		List<String> list = Arrays.asList(
+				AUTHORIZATION_CODE_TIME_TO_LIVE,
+				ACCESS_TOKEN_TIME_TO_LIVE,
+				REFRESH_TOKEN_TIME_TO_LIVE,
+				DEVICE_CODE_TIME_TO_LIVE);
+		// @formatter:on
 		for (String name : list) {
 			Object object = settings.get(name);
 			if (object instanceof Double) {
