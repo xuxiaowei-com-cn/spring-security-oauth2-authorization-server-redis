@@ -81,6 +81,34 @@
         </dependency>
     </dependencies>
 
+    <profiles>
+        <profile>
+            <id>ossrh</id>
+            <distributionManagement>
+                <snapshotRepository>
+                    <id>ossrh</id>
+                    <url>https://s01.oss.sonatype.org/content/repositories/snapshots</url>
+                </snapshotRepository>
+                <repository>
+                    <id>ossrh</id>
+                    <url>https://s01.oss.sonatype.org/service/local/staging/deploy/maven2/</url>
+                </repository>
+            </distributionManagement>
+        </profile>
+        <profile>
+            <id>github</id>
+            <distributionManagement>
+                <repository>
+                    <id>github</id>
+                    <name>GitHub Repository</name>
+                    <url>
+                        https://maven.pkg.github.com/xuxiaowei-com-cn/spring-security-oauth2-authorization-server-redis/
+                    </url>
+                </repository>
+            </distributionManagement>
+        </profile>
+    </profiles>
+
     <build>
         <plugins>
             <!-- https://mvnrepository.com/artifact/pl.project13.maven/git-commit-id-plugin -->
