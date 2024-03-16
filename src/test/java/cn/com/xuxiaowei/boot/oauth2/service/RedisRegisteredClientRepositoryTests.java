@@ -1,7 +1,7 @@
-package cn.com.xuxiaowei.boot.oauth2;
+package cn.com.xuxiaowei.boot.oauth2.service;
 
+import cn.com.xuxiaowei.boot.oauth2.SpringSecurityOauth2AuthorizationServerRedisApplication;
 import cn.com.xuxiaowei.boot.oauth2.annotation.EnableOAuth2Redis;
-import cn.com.xuxiaowei.boot.oauth2.service.RedisRegisteredClientRepository;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import lombok.extern.slf4j.Slf4j;
@@ -21,6 +21,7 @@ import org.springframework.security.oauth2.server.authorization.settings.ClientS
 
 import java.util.UUID;
 
+import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
 
 /**
@@ -93,14 +94,14 @@ public class RedisRegisteredClientRepositoryTests {
 			String getById = stringRedisTemplate.opsForValue().get(idKey);
 			assertNotNull(getById);
 			RegisteredClient getByIdRegisteredClient = objectMapper.readValue(getById, RegisteredClient.class);
-			registeredClient.equals(getByIdRegisteredClient);
+			assertEquals(registeredClient, getByIdRegisteredClient);
 
 			String clientIdKey = redisRegisteredClientRepository.clientIdKey(clientId);
 			String getByClientId = stringRedisTemplate.opsForValue().get(clientIdKey);
 			assertNotNull(getByClientId);
 			RegisteredClient getByClientIdRegisteredClient = objectMapper.readValue(getByClientId,
 					RegisteredClient.class);
-			registeredClient.equals(getByClientIdRegisteredClient);
+			assertEquals(registeredClient, getByClientIdRegisteredClient);
 		}
 	}
 
