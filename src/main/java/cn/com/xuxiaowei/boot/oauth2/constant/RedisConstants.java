@@ -4,7 +4,7 @@ package cn.com.xuxiaowei.boot.oauth2.constant;
  * Redis 常量
  *
  * @author xuxiaowei
- * @since 0.0.1
+ * @since 2.0.0
  */
 public class RedisConstants {
 
