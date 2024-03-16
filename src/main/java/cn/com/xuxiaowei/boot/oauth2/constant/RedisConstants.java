@@ -37,6 +37,6 @@ public class RedisConstants {
 
 	public static final String AUTHORITIES = "authorities";
 
-	public static final String SCOPES= "scopes";
+	public static final String SCOPES = "scopes";
 
 }
