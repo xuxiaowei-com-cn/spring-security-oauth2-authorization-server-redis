@@ -1,5 +1,6 @@
 package cn.com.xuxiaowei.boot.oauth2.deserializer;
 
+import cn.com.xuxiaowei.boot.oauth2.constant.RedisConstants;
 import com.fasterxml.jackson.core.JacksonException;
 import com.fasterxml.jackson.core.JsonParser;
 import com.fasterxml.jackson.core.type.TypeReference;
@@ -31,7 +32,8 @@ public class ClientSettingsDeserializer extends StdDeserializer<ClientSettings> 
 
 	@Override
 	public ClientSettings deserialize(JsonParser p, DeserializationContext ctxt) throws IOException, JacksonException {
-		Map<String, Object> settings = OBJECT_MAPPER.readValue(p.getCodec().readTree(p).get("settings").toString(),
+		Map<String, Object> settings = OBJECT_MAPPER.readValue(
+				p.getCodec().readTree(p).get(RedisConstants.SETTINGS).toString(),
 				new TypeReference<Map<String, Object>>() {
 				});
 
