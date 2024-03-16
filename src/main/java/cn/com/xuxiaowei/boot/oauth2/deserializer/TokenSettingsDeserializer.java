@@ -1,5 +1,6 @@
 package cn.com.xuxiaowei.boot.oauth2.deserializer;
 
+import cn.com.xuxiaowei.boot.oauth2.constant.RedisConstants;
 import com.fasterxml.jackson.core.JacksonException;
 import com.fasterxml.jackson.core.JsonParser;
 import com.fasterxml.jackson.core.TreeNode;
@@ -48,7 +49,7 @@ public class TokenSettingsDeserializer extends StdDeserializer<TokenSettings> {
 
 	@SneakyThrows
 	public static Map<String, Object> settingsTreeNodeToMap(TreeNode treeNode) {
-		TreeNode settingsTreeNode = treeNode.get("settings");
+		TreeNode settingsTreeNode = treeNode.get(RedisConstants.SETTINGS);
 		String string = settingsTreeNode.toString();
 		return OBJECT_MAPPER.readValue(string, new TypeReference<Map<String, Object>>() {
 		});

@@ -87,7 +87,7 @@ public class RedisRegisteredClientRepository implements RegisteredClientReposito
 		String idKey = idKey(id);
 
 		String redisVersion = RedisUtils.redisVersion(stringRedisTemplate);
-		int compare = StringUtils.compare(redisVersion, RedisConstants.GETDEL_VERSION);
+		int compare = StringUtils.compare(redisVersion, RedisConstants.GETEX_VERSION);
 
 		String json;
 

@@ -29,4 +29,14 @@ public class RedisConstants {
 	 */
 	public static final String GETDEL_VERSION = "6.2.0";
 
+	public static final String SETTINGS = "settings";
+
+	public static final String REGISTERED_CLIENT_ID = "registeredClientId";
+
+	public static final String PRINCIPAL_NAME = "principalName";
+
+	public static final String AUTHORITIES = "authorities";
+
+	public static final String SCOPES= "scopes";
+
 }
