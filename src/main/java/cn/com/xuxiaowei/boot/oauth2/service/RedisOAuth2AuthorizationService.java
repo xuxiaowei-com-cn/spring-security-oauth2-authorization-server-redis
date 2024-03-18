@@ -233,6 +233,7 @@ public class RedisOAuth2AuthorizationService implements OAuth2AuthorizationServi
 				json = objectMapper.writeValueAsString(authorization);
 
 				// @formatter:off
+				stringRedisTemplate.opsForValue().set(tokenKey, json, timeout, TimeUnit.SECONDS);
 				stringRedisTemplate.opsForValue().set(idKey(authorization.getId()), json, timeout, TimeUnit.SECONDS);
 				stringRedisTemplate.opsForValue().set(tokenKey(token, OAuth2TokenType.REFRESH_TOKEN), json, timeout, TimeUnit.SECONDS);
 				stringRedisTemplate.opsForValue().set(tokenKey(token, OAuth2TokenType.ACCESS_TOKEN), json, timeout, TimeUnit.SECONDS);
@@ -242,6 +243,7 @@ public class RedisOAuth2AuthorizationService implements OAuth2AuthorizationServi
 		else {
 			authorization = objectMapper.readValue(json, OAuth2Authorization.class);
 
+			stringRedisTemplate.expire(tokenKey, timeout, TimeUnit.SECONDS);
 			stringRedisTemplate.expire(idKey(authorization.getId()), timeout, TimeUnit.SECONDS);
 			stringRedisTemplate.expire(tokenKey(token, OAuth2TokenType.REFRESH_TOKEN), timeout, TimeUnit.SECONDS);
 			stringRedisTemplate.expire(tokenKey(token, OAuth2TokenType.ACCESS_TOKEN), timeout, TimeUnit.SECONDS);
