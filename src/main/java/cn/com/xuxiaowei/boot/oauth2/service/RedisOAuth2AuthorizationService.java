@@ -20,12 +20,11 @@ import org.springframework.security.oauth2.core.AuthorizationGrantType;
 import org.springframework.security.oauth2.core.OAuth2AccessToken;
 import org.springframework.security.oauth2.core.OAuth2RefreshToken;
 import org.springframework.security.oauth2.core.endpoint.OAuth2ParameterNames;
-import org.springframework.security.oauth2.server.authorization.JdbcOAuth2AuthorizationService;
-import org.springframework.security.oauth2.server.authorization.OAuth2Authorization;
-import org.springframework.security.oauth2.server.authorization.OAuth2AuthorizationService;
-import org.springframework.security.oauth2.server.authorization.OAuth2TokenType;
+import org.springframework.security.oauth2.core.oidc.OidcIdToken;
+import org.springframework.security.oauth2.server.authorization.*;
 import org.springframework.security.oauth2.server.authorization.client.RegisteredClientRepository;
 
+import java.time.Instant;
 import java.util.concurrent.TimeUnit;
 
 /**
@@ -87,6 +86,27 @@ public class RedisOAuth2AuthorizationService implements OAuth2AuthorizationServi
 		long timeout = properties.getAuthorizationTimeout();
 
 		String json = objectMapper.writeValueAsString(authorization);
+
+		OAuth2Authorization.Token<OAuth2AuthorizationCode> oauth2AuthorizationCodeToken = authorization
+			.getToken(OAuth2AuthorizationCode.class);
+		OAuth2Authorization.Token<OidcIdToken> oidcIdTokenToken = authorization.getToken(OidcIdToken.class);
+
+		if (oauth2AuthorizationCodeToken != null) {
+
+			String string = objectMapper.writeValueAsString(oauth2AuthorizationCodeToken);
+
+			stringRedisTemplate.opsForValue()
+				.set(tokenKey(oauth2AuthorizationCodeToken.getToken().getTokenValue(),
+						new OAuth2TokenType(OAuth2ParameterNames.CODE)), string, timeout, TimeUnit.SECONDS);
+
+			stringRedisTemplate.opsForValue()
+				.set(codeTokenKey(oauth2AuthorizationCodeToken.getToken().getTokenValue(),
+						new OAuth2TokenType(OAuth2ParameterNames.CODE)), json, timeout, TimeUnit.SECONDS);
+		}
+
+		if (oidcIdTokenToken != null) {
+
+		}
 
 		String idKey = idKey(authorization.getId());
 
@@ -205,7 +225,14 @@ public class RedisOAuth2AuthorizationService implements OAuth2AuthorizationServi
 	@Override
 	public OAuth2Authorization findByToken(String token, OAuth2TokenType tokenType) {
 
-		String tokenKey = tokenKey(token, tokenType);
+		String tokenKey;
+
+		if (OAuth2ParameterNames.CODE.equals(tokenType.getValue())) {
+			tokenKey = codeTokenKey(token, new OAuth2TokenType(OAuth2ParameterNames.CODE));
+		}
+		else {
+			tokenKey = tokenKey(token, tokenType);
+		}
 
 		long timeout = properties.getAuthorizationTimeout();
 
@@ -243,6 +270,29 @@ public class RedisOAuth2AuthorizationService implements OAuth2AuthorizationServi
 		else {
 			authorization = objectMapper.readValue(json, OAuth2Authorization.class);
 
+			if (OAuth2ParameterNames.CODE.equals(tokenType.getValue())) {
+
+				String string = stringRedisTemplate.opsForValue().get(tokenKey(token, tokenType));
+
+				OAuth2AuthorizationDeserializer.OAuth2Token oauth2Token = objectMapper.readValue(string,
+						OAuth2AuthorizationDeserializer.OAuth2Token.class);
+
+				OAuth2AuthorizationDeserializer.Token tokenCode = oauth2Token.getToken();
+				String tokenValue = tokenCode.getTokenValue();
+				Long issuedAtSecond = tokenCode.getIssuedAtSecond();
+				Long issuedAtNano = tokenCode.getIssuedAtNano();
+				Long expiresAtSecond = tokenCode.getExpiresAtSecond();
+				Long expiresAtNano = tokenCode.getExpiresAtNano();
+
+				Instant issuedAt = Instant.ofEpochSecond(issuedAtSecond, issuedAtNano);
+				Instant expiresAt = Instant.ofEpochSecond(expiresAtSecond, expiresAtNano);
+
+				OAuth2AuthorizationCode oauth2AuthorizationCode = new OAuth2AuthorizationCode(tokenValue, issuedAt,
+						expiresAt);
+
+				authorization = OAuth2Authorization.from(authorization).token(oauth2AuthorizationCode).build();
+			}
+
 			stringRedisTemplate.expire(tokenKey, timeout, TimeUnit.SECONDS);
 			stringRedisTemplate.expire(idKey(authorization.getId()), timeout, TimeUnit.SECONDS);
 			stringRedisTemplate.expire(tokenKey(token, OAuth2TokenType.REFRESH_TOKEN), timeout, TimeUnit.SECONDS);
@@ -260,6 +310,11 @@ public class RedisOAuth2AuthorizationService implements OAuth2AuthorizationServi
 	public String tokenKey(String token, OAuth2TokenType tokenType) {
 		String prefix = properties.getPrefix();
 		return String.format("%s:%s:token:%s:%s", prefix, TABLE_NAME, tokenType.getValue(), token);
+	}
+
+	public String codeTokenKey(String token, OAuth2TokenType tokenType) {
+		String prefix = properties.getPrefix();
+		return String.format("%s:%s:token:id:%s:%s", prefix, TABLE_NAME, tokenType.getValue(), token);
 	}
 
 }

@@ -259,7 +259,7 @@ public class OAuth2AuthorizationDeserializer extends StdDeserializer<OAuth2Autho
 	 * @since 2.0.0
 	 */
 	@Data
-	private static class OAuth2Token {
+	public static class OAuth2Token {
 
 		private Token token;
 
@@ -284,7 +284,7 @@ public class OAuth2AuthorizationDeserializer extends StdDeserializer<OAuth2Autho
 	 * @since 2.0.0
 	 */
 	@Data
-	private static class Token {
+	public static class Token {
 
 		private String tokenValue;
 
