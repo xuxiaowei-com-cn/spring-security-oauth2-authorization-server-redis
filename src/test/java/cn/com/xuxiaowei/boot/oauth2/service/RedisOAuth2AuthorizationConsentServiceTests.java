@@ -9,7 +9,6 @@ import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.data.redis.core.StringRedisTemplate;
-import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.security.core.authority.SimpleGrantedAuthority;
 import org.springframework.security.oauth2.server.authorization.OAuth2AuthorizationConsent;
 
@@ -18,6 +17,8 @@ import java.util.UUID;
 import static org.junit.jupiter.api.Assertions.*;
 
 /**
+ * 表 oauth2_authorization_consent 的 Redis 实现 的 单元测试类
+ *
  * @author xuxiaowei
  * @since 2.0.0
  */
@@ -26,9 +27,6 @@ import static org.junit.jupiter.api.Assertions.*;
 @SpringBootTest(classes = SpringSecurityOauth2AuthorizationServerRedisApplication.class,
 		webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT)
 class RedisOAuth2AuthorizationConsentServiceTests {
-
-	@Autowired
-	private JdbcTemplate jdbcTemplate;
 
 	@Autowired
 	private StringRedisTemplate stringRedisTemplate;

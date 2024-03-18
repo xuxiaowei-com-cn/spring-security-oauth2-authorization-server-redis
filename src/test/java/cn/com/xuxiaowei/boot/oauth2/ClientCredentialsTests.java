@@ -17,6 +17,7 @@ import org.springframework.security.crypto.factory.PasswordEncoderFactories;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.security.oauth2.core.AuthorizationGrantType;
 import org.springframework.security.oauth2.core.ClientAuthenticationMethod;
+import org.springframework.security.oauth2.core.endpoint.OAuth2ParameterNames;
 import org.springframework.security.oauth2.core.oidc.OidcScopes;
 import org.springframework.security.oauth2.server.authorization.client.RegisteredClient;
 import org.springframework.security.oauth2.server.authorization.settings.ClientSettings;
@@ -33,6 +34,8 @@ import java.util.UUID;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
 
 /**
+ * OAuth 2.1 Redis 实现的 凭证式 集成测试类
+ *
  * @author xuxiaowei
  * @since 2.0.0
  */
@@ -58,6 +61,7 @@ class ClientCredentialsTests {
 		String clientSecret = UUID.randomUUID().toString();
 		String encode = passwordEncoder.encode(clientSecret);
 
+		// 创建随机客户
 		RegisteredClient registeredClient = RegisteredClient.withId(id)
 			.clientId(clientId)
 			.clientSecret(encode)
@@ -76,6 +80,7 @@ class ClientCredentialsTests {
 			.clientSettings(ClientSettings.builder().requireAuthorizationConsent(true).build())
 			.build();
 
+		// 保存随机客户：保存到 Redis、H2 数据库中
 		redisRegisteredClientRepository.save(registeredClient);
 
 		RestTemplate restTemplate = new RestTemplate();
@@ -83,13 +88,16 @@ class ClientCredentialsTests {
 		httpHeaders.setContentType(MediaType.APPLICATION_FORM_URLENCODED);
 		httpHeaders.setBasicAuth(clientId, clientSecret);
 		MultiValueMap<String, String> requestBody = new LinkedMultiValueMap<>();
-		requestBody.put("grant_type", Collections.singletonList("client_credentials"));
-		requestBody.put("scope", Collections.singletonList("openid profile message.read message.write"));
+		requestBody.put(OAuth2ParameterNames.GRANT_TYPE, Collections.singletonList("client_credentials"));
+		requestBody.put(OAuth2ParameterNames.SCOPE,
+				Collections.singletonList("openid profile message.read message.write"));
 		HttpEntity<MultiValueMap<String, String>> httpEntity = new HttpEntity<>(requestBody, httpHeaders);
 
+		// OAuth 2.1 凭证式授权
 		Map map = restTemplate.postForObject(String.format("http://127.0.0.1:%d/oauth2/token", serverPort), httpEntity,
 				Map.class);
 
+		// 返回值不为空
 		assertNotNull(map);
 
 		ObjectMapper objectMapper = new ObjectMapper();
@@ -97,10 +105,15 @@ class ClientCredentialsTests {
 
 		log.info("token:\n{}", objectWriter.writeValueAsString(map));
 
-		assertNotNull(map.get("access_token"));
-		assertNotNull(map.get("scope"));
-		assertNotNull(map.get("token_type"));
-		assertNotNull(map.get("expires_in"));
+		// 返回值
+		// 授权 Token
+		assertNotNull(map.get(OAuth2ParameterNames.ACCESS_TOKEN));
+		// 授权范围
+		assertNotNull(map.get(OAuth2ParameterNames.SCOPE));
+		// 授权类型
+		assertNotNull(map.get(OAuth2ParameterNames.TOKEN_TYPE));
+		// 过期时间
+		assertNotNull(map.get(OAuth2ParameterNames.EXPIRES_IN));
 	}
 
 }

@@ -5,6 +5,7 @@ package cn.com.xuxiaowei.boot.oauth2.constant;
  *
  * @author xuxiaowei
  * @since 2.0.0
+ * @see org.springframework.security.oauth2.core.endpoint.OAuth2ParameterNames
  */
 public class RedisConstants {
 
@@ -38,5 +39,27 @@ public class RedisConstants {
 	public static final String AUTHORITIES = "authorities";
 
 	public static final String SCOPES = "scopes";
+
+	public static final String ID = "id";
+
+	public static final String AUTHORIZATION_GRANT_TYPE = "authorizationGrantType";
+
+	public static final String AUTHORIZED_SCOPES = "authorizedScopes";
+
+	public static final String ACCESS_TOKEN = "accessToken";
+
+	public static final String REFRESH_TOKEN = "refreshToken";
+
+	public static final String CLIENT_ID = "clientId";
+
+	public static final String REDIRECT_URI = "redirectUri";
+
+	public static final String AUTHORIZATION_REQUEST_URI = "authorizationRequestUri";
+
+	public static final String AUTHORIZATION_URI = "authorizationUri";
+
+	public static final String ATTRIBUTES = "attributes";
+
+	public static final String ID_TOKEN = "id_token";
 
 }

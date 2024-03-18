@@ -9,6 +9,10 @@ import java.math.BigDecimal;
 import java.math.RoundingMode;
 
 /**
+ * BigDecimal 反序列化
+ * <p>
+ * 用户处理有 9 位小数的时间反序列化问题
+ *
  * @author xuxiaowei
  * @since 2.0.0
  */

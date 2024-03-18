@@ -29,6 +29,8 @@ import java.security.interfaces.RSAPublicKey;
 import java.util.UUID;
 
 /**
+ * 秘钥生成工具
+ *
  * @author Joe Grandja
  * @since 2.0.0
  */

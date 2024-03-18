@@ -41,6 +41,8 @@ import java.util.List;
 import static org.springframework.security.config.Customizer.withDefaults;
 
 /**
+ * 此类仅用于测试类加载默认配置
+ *
  * @author xuxiaowei
  * @since 2.0.0
  */
@@ -48,8 +50,14 @@ import static org.springframework.security.config.Customizer.withDefaults;
 @Configuration(proxyBeanMethods = false)
 public class SpringSecurityOauth2AuthorizationServerRedisApplication {
 
+	/**
+	 * 默认用户名
+	 */
 	public static final String username = "user1";
 
+	/**
+	 * 默认密码
+	 */
 	public static final String password = "password";
 
 	public static void main(String[] args) {
@@ -59,7 +67,10 @@ public class SpringSecurityOauth2AuthorizationServerRedisApplication {
 	@Bean
 	@Order(Ordered.HIGHEST_PRECEDENCE)
 	public SecurityFilterChain authorizationServerSecurityFilterChain(HttpSecurity http) throws Exception {
+
+		// 开启 OAuth 2.1 配置
 		OAuth2AuthorizationServerConfiguration.applyDefaultSecurity(http);
+
 		http.getConfigurer(OAuth2AuthorizationServerConfigurer.class)
 			// Enable
 			// OpenID
@@ -67,15 +78,16 @@ public class SpringSecurityOauth2AuthorizationServerRedisApplication {
 			// 1.0
 			.oidc(Customizer.withDefaults());
 
-		// @formatter:off
-		http
-				.exceptionHandling(exceptions ->
-						exceptions.authenticationEntryPoint(new LoginUrlAuthenticationEntryPoint("/login"))
-				);
-		// @formatter:on
+		// 未登录时，跳转到 /login 页面
+		http.exceptionHandling(
+				exceptions -> exceptions.authenticationEntryPoint(new LoginUrlAuthenticationEntryPoint("/login")));
+
 		return http.build();
 	}
 
+	/**
+	 * 开启 URL 参数 token 验证，参数名：access_token
+	 */
 	@Bean
 	public BearerTokenResolver bearerTokenResolver() {
 		DefaultBearerTokenResolver bearerTokenResolver = new DefaultBearerTokenResolver();
@@ -86,30 +98,50 @@ public class SpringSecurityOauth2AuthorizationServerRedisApplication {
 	@Bean
 	public SecurityFilterChain defaultSecurityFilterChain(HttpSecurity http) throws Exception {
 
+		// 默认登陆配置
+		// 所有路径均需要授权后才能访问
 		http.authorizeRequests(authorizeRequests -> authorizeRequests.anyRequest().authenticated())
 			.formLogin(withDefaults());
 
+		// 开启 OAuth 2 资源服务配置
 		http.oauth2ResourceServer(OAuth2ResourceServerConfigurer::jwt);
 
 		return http.build();
 	}
 
+	/**
+	 * 用户接口 实现
+	 * <p>
+	 * 启动程序时，创建一个默认用户
+	 * @param dataSource 数据源
+	 */
 	@Bean
 	public UserDetailsService userDetailsService(DataSource dataSource) {
 
+		// 权限
 		List<GrantedAuthority> authorities = new ArrayList<>();
 		authorities.add(new SimpleGrantedAuthority("programmer"));
 
+		// 密码加密储存
 		PasswordEncoder passwordEncoder = PasswordEncoderFactories.createDelegatingPasswordEncoder();
 		String encode = passwordEncoder.encode(password);
 
+		// 创建用户
 		UserDetails user = new User(username, encode, authorities);
 
 		JdbcUserDetailsManager jdbcUserDetailsManager = new JdbcUserDetailsManager(dataSource);
+
+		// 将用户保存到数据库
 		jdbcUserDetailsManager.createUser(user);
+
 		return jdbcUserDetailsManager;
 	}
 
+	/**
+	 * 数据库
+	 * <p>
+	 * 自动化测试，使用 H2 嵌入型数据库
+	 */
 	@Bean
 	public EmbeddedDatabase embeddedDatabase() {
 		// @formatter:off
@@ -117,6 +149,7 @@ public class SpringSecurityOauth2AuthorizationServerRedisApplication {
                 .generateUniqueName(true)
                 .setType(EmbeddedDatabaseType.H2)
                 .setScriptEncoding("UTF-8")
+				// 程序启动后，初始化数据库，创建表结构
                 .addScript("org/springframework/security/oauth2/server/authorization/oauth2-authorization-schema.sql")
                 .addScript("org/springframework/security/oauth2/server/authorization/oauth2-authorization-consent-schema.sql")
                 .addScript("org/springframework/security/oauth2/server/authorization/client/oauth2-registered-client-schema.sql")
@@ -125,6 +158,11 @@ public class SpringSecurityOauth2AuthorizationServerRedisApplication {
         // @formatter:on
 	}
 
+	/**
+	 * OAuth 2.1 加密配置
+	 * <p>
+	 * 若使用 RSA 秘钥，最少需要 2048 位
+	 */
 	@Bean
 	public JWKSource<SecurityContext> jwkSource() {
 		RSAKey rsaKey = Jwks.generateRsa();
@@ -132,11 +170,19 @@ public class SpringSecurityOauth2AuthorizationServerRedisApplication {
 		return (jwkSelector, securityContext) -> jwkSelector.select(jwkSet);
 	}
 
+	/**
+	 * JWT 解码器，用户验证 JWT 签名
+	 */
 	@Bean
 	public JwtDecoder jwtDecoder(JWKSource<SecurityContext> jwkSource) {
 		return OAuth2AuthorizationServerConfiguration.jwtDecoder(jwkSource);
 	}
 
+	/**
+	 * OAuth 2.1 端点配置
+	 * <p>
+	 * 地址：/.well-known/oauth-authorization-server
+	 */
 	@Bean
 	public AuthorizationServerSettings authorizationServerSettings() {
 		return AuthorizationServerSettings.builder().build();

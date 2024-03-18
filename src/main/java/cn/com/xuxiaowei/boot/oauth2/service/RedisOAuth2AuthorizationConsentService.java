@@ -21,11 +21,15 @@ import org.springframework.security.oauth2.server.authorization.client.Registere
 import java.util.concurrent.TimeUnit;
 
 /**
+ * 表 oauth2_authorization_consent 的 Redis 实现
+ *
  * @author xuxiaowei
  * @since 2.0.0
  */
 @Slf4j
 public class RedisOAuth2AuthorizationConsentService implements OAuth2AuthorizationConsentService {
+
+	public static final String TABLE_NAME = "oauth2_authorization_consent";
 
 	private final JdbcOAuth2AuthorizationConsentService jdbcOAuth2AuthorizationConsentService;
 
@@ -128,7 +132,7 @@ public class RedisOAuth2AuthorizationConsentService implements OAuth2Authorizati
 
 	public String key(String registeredClientId, String principalName) {
 		String prefix = properties.getPrefix();
-		return prefix + ":oauth2_authorization_consent:" + registeredClientId + ":" + principalName;
+		return String.format("%s:%s:%s:%s", prefix, TABLE_NAME, registeredClientId, principalName);
 	}
 
 }

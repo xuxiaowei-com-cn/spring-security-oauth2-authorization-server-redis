@@ -28,11 +28,15 @@ import org.springframework.security.oauth2.server.authorization.settings.TokenSe
 import java.util.concurrent.TimeUnit;
 
 /**
+ * 表 oauth2_registered_client 的 Redis 实现
+ *
  * @author xuxiaowei
  * @since 2.0.0
  */
 @Slf4j
 public class RedisRegisteredClientRepository implements RegisteredClientRepository {
+
+	public static final String TABLE_NAME = "oauth2_registered_client";
 
 	private final SpringAuthorizationServerRedisProperties properties;
 
@@ -180,12 +184,12 @@ public class RedisRegisteredClientRepository implements RegisteredClientReposito
 
 	public String idKey(String id) {
 		String prefix = properties.getPrefix();
-		return prefix + ":oauth2_registered_client:id:" + id;
+		return String.format("%s:%s:id:%s", prefix, TABLE_NAME, id);
 	}
 
 	public String clientIdKey(String clientId) {
 		String prefix = properties.getPrefix();
-		return prefix + ":oauth2_registered_client:clientId:" + clientId;
+		return String.format("%s:%s:clientId:%s", prefix, TABLE_NAME, clientId);
 	}
 
 }
