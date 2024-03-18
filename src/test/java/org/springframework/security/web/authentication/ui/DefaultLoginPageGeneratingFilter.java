@@ -39,6 +39,8 @@ import java.util.Map;
 import java.util.function.Function;
 
 /**
+ * 此类用于在自动化测试时，禁用 默认登陆页面 CSS 加载
+ * <p>
  * For internal use with namespace configuration in the case where a user doesn't
  * configure a login page. The configuration code will insert this filter in the chain
  * instead.

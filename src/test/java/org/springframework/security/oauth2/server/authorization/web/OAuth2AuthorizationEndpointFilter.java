@@ -59,6 +59,8 @@ import java.util.HashSet;
 import java.util.Set;
 
 /**
+ * 此类用于在自动化测试时，禁用 默认授权页面 CSS 加载
+ * <p>
  * A {@code Filter} for the OAuth 2.0 Authorization Code Grant, which handles the
  * processing of the OAuth 2.0 Authorization Request and Consent.
  *
