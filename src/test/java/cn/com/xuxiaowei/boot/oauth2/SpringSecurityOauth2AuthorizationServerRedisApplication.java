@@ -17,7 +17,13 @@ import org.springframework.jdbc.datasource.embedded.EmbeddedDatabaseType;
 import org.springframework.security.config.Customizer;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.annotation.web.configurers.oauth2.server.resource.OAuth2ResourceServerConfigurer;
+import org.springframework.security.core.GrantedAuthority;
+import org.springframework.security.core.authority.SimpleGrantedAuthority;
+import org.springframework.security.core.userdetails.User;
+import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.security.core.userdetails.UserDetailsService;
+import org.springframework.security.crypto.factory.PasswordEncoderFactories;
+import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.security.oauth2.jwt.JwtDecoder;
 import org.springframework.security.oauth2.server.authorization.config.annotation.web.configuration.OAuth2AuthorizationServerConfiguration;
 import org.springframework.security.oauth2.server.authorization.config.annotation.web.configurers.OAuth2AuthorizationServerConfigurer;
@@ -29,12 +35,22 @@ import org.springframework.security.web.SecurityFilterChain;
 import org.springframework.security.web.authentication.LoginUrlAuthenticationEntryPoint;
 
 import javax.sql.DataSource;
+import java.util.ArrayList;
+import java.util.List;
 
 import static org.springframework.security.config.Customizer.withDefaults;
 
+/**
+ * @author xuxiaowei
+ * @since 2.0.0
+ */
 @SpringBootApplication
 @Configuration(proxyBeanMethods = false)
 public class SpringSecurityOauth2AuthorizationServerRedisApplication {
+
+	public static final String username = "user1";
+
+	public static final String password = "password";
 
 	public static void main(String[] args) {
 		SpringApplication.run(SpringSecurityOauth2AuthorizationServerRedisApplication.class, args);
@@ -80,7 +96,18 @@ public class SpringSecurityOauth2AuthorizationServerRedisApplication {
 
 	@Bean
 	public UserDetailsService userDetailsService(DataSource dataSource) {
-		return new JdbcUserDetailsManager(dataSource);
+
+		List<GrantedAuthority> authorities = new ArrayList<>();
+		authorities.add(new SimpleGrantedAuthority("programmer"));
+
+		PasswordEncoder passwordEncoder = PasswordEncoderFactories.createDelegatingPasswordEncoder();
+		String encode = passwordEncoder.encode(password);
+
+		UserDetails user = new User(username, encode, authorities);
+
+		JdbcUserDetailsManager jdbcUserDetailsManager = new JdbcUserDetailsManager(dataSource);
+		jdbcUserDetailsManager.createUser(user);
+		return jdbcUserDetailsManager;
 	}
 
 	@Bean
@@ -93,6 +120,7 @@ public class SpringSecurityOauth2AuthorizationServerRedisApplication {
                 .addScript("org/springframework/security/oauth2/server/authorization/oauth2-authorization-schema.sql")
                 .addScript("org/springframework/security/oauth2/server/authorization/oauth2-authorization-consent-schema.sql")
                 .addScript("org/springframework/security/oauth2/server/authorization/client/oauth2-registered-client-schema.sql")
+				.addScript("org/springframework/security/core/userdetails/jdbc/users.ddl")
                 .build();
         // @formatter:on
 	}
