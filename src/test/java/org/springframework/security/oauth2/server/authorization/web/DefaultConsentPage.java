@@ -30,6 +30,8 @@ import org.springframework.security.oauth2.core.endpoint.OAuth2ParameterNames;
 import org.springframework.security.oauth2.core.oidc.OidcScopes;
 
 /**
+ * 此类用于在自动化测试时，禁用 默认授权页面 CSS 加载
+ * <p>
  * For internal use only.
  */
 class DefaultConsentPage {
