@@ -18,6 +18,7 @@ import org.springframework.security.oauth2.core.AuthorizationGrantType;
 import org.springframework.security.oauth2.core.OAuth2AccessToken;
 import org.springframework.security.oauth2.core.OAuth2RefreshToken;
 import org.springframework.security.oauth2.core.endpoint.OAuth2AuthorizationRequest;
+import org.springframework.security.oauth2.core.endpoint.OAuth2ParameterNames;
 import org.springframework.security.oauth2.server.authorization.OAuth2Authorization;
 import org.springframework.security.oauth2.server.authorization.client.RegisteredClient;
 import org.springframework.security.web.authentication.WebAuthenticationDetails;
@@ -27,10 +28,7 @@ import java.math.BigDecimal;
 import java.math.RoundingMode;
 import java.security.Principal;
 import java.time.Instant;
-import java.util.HashSet;
-import java.util.Map;
-import java.util.Set;
-import java.util.UUID;
+import java.util.*;
 
 /**
  * {@link OAuth2Authorization} 反序列化
@@ -118,11 +116,16 @@ public class OAuth2AuthorizationDeserializer extends StdDeserializer<OAuth2Autho
 		String redirectUri = oauth2AuthorizationRequestMap.get("redirectUri").toString();
 		registeredClientBuilder.redirectUri(redirectUri);
 
+		Object state = oauth2AuthorizationRequestMap.get(OAuth2ParameterNames.STATE);
+		Object scopes = oauth2AuthorizationRequestMap.get("scopes");
+
 		OAuth2AuthorizationRequest oauth2AuthorizationRequest = OAuth2AuthorizationRequest.authorizationCode()
 			.authorizationRequestUri(oauth2AuthorizationRequestMap.get("authorizationRequestUri").toString())
 			.authorizationUri(oauth2AuthorizationRequestMap.get("authorizationUri").toString())
 			.redirectUri(oauth2AuthorizationRequestMap.get("redirectUri").toString())
 			.clientId(clientId)
+			.state(state == null ? null : state.toString())
+			.scopes(scopes == null ? null : new HashSet<>((List<String>) scopes))
 			.build();
 
 		registeredClientBuilder.authorizationGrantType(authorizationGrantType);
@@ -190,6 +193,10 @@ public class OAuth2AuthorizationDeserializer extends StdDeserializer<OAuth2Autho
 
 		OAuth2Token oauth2Token = OBJECT_MAPPER.convertValue(treeNode, OAuth2Token.class);
 
+		if (oauth2Token == null) {
+			return null;
+		}
+
 		Token token = oauth2Token.getToken();
 		Map<String, Object> metadata = oauth2Token.getMetadata();
 		boolean isActive = oauth2Token.isActive();
@@ -216,6 +223,10 @@ public class OAuth2AuthorizationDeserializer extends StdDeserializer<OAuth2Autho
 		TreeNode treeNode = p.readValueAsTree();
 
 		OAuth2Token oauth2Token = OBJECT_MAPPER.convertValue(treeNode, OAuth2Token.class);
+
+		if (oauth2Token == null) {
+			return null;
+		}
 
 		Token token = oauth2Token.getToken();
 		Map<String, Object> metadata = oauth2Token.getMetadata();

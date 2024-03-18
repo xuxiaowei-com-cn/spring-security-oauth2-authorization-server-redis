@@ -19,6 +19,7 @@ import org.springframework.jdbc.support.lob.LobHandler;
 import org.springframework.security.oauth2.core.AuthorizationGrantType;
 import org.springframework.security.oauth2.core.OAuth2AccessToken;
 import org.springframework.security.oauth2.core.OAuth2RefreshToken;
+import org.springframework.security.oauth2.core.endpoint.OAuth2ParameterNames;
 import org.springframework.security.oauth2.server.authorization.JdbcOAuth2AuthorizationService;
 import org.springframework.security.oauth2.server.authorization.OAuth2Authorization;
 import org.springframework.security.oauth2.server.authorization.OAuth2AuthorizationService;
@@ -99,6 +100,15 @@ public class RedisOAuth2AuthorizationService implements OAuth2AuthorizationServi
 			String tokenKey = tokenKey(tokenValue, OAuth2TokenType.REFRESH_TOKEN);
 
 			stringRedisTemplate.opsForValue().set(tokenKey, json, timeout, TimeUnit.SECONDS);
+		}
+
+		if (accessToken == null && refreshToken == null) {
+			Object state = authorization.getAttribute(OAuth2ParameterNames.STATE);
+			if (state != null) {
+				String tokenKey = tokenKey(state.toString(), new OAuth2TokenType(OAuth2ParameterNames.STATE));
+
+				stringRedisTemplate.opsForValue().set(tokenKey, json, timeout, TimeUnit.SECONDS);
+			}
 		}
 
 		stringRedisTemplate.opsForValue().set(idKey, json, timeout, TimeUnit.SECONDS);
