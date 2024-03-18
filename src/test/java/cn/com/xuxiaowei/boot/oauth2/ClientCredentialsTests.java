@@ -34,7 +34,7 @@ import static org.junit.jupiter.api.Assertions.assertNotNull;
 
 /**
  * @author xuxiaowei
- * @since 0.0.1
+ * @since 2.0.0
  */
 @Slf4j
 @EnableOAuth2Redis
