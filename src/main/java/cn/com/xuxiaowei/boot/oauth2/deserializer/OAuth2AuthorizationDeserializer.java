@@ -163,13 +163,19 @@ public class OAuth2AuthorizationDeserializer extends StdDeserializer<OAuth2Autho
 		OAuth2Authorization.Builder oauth2AuthorizationBuilder = OAuth2Authorization
 			.withRegisteredClient(registeredClient)
 			.id(id)
-			.accessToken(accessToken)
-			.refreshToken(refreshToken)
 			.principalName(principalName)
 			.authorizedScopes(authorizedScopes)
 			.authorizationGrantType(authorizationGrantType)
 			.attribute(OAuth2AuthorizationRequest.class.getName(), oauth2AuthorizationRequest)
 			.attribute(Principal.class.getName(), principal);
+
+		if (accessToken != null) {
+			oauth2AuthorizationBuilder.accessToken(accessToken);
+		}
+
+		if (refreshToken != null) {
+			oauth2AuthorizationBuilder.refreshToken(refreshToken);
+		}
 
 		for (String key : attributesMap.keySet()) {
 			oauth2AuthorizationBuilder.attribute(key, attributesMap.get(key));
