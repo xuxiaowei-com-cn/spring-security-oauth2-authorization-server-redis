@@ -37,6 +37,8 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
 
 /**
+ * 表 oauth2_authorization 的 Redis 实现 的 单元测试类
+ *
  * @author xuxiaowei
  * @since 2.0.0
  */

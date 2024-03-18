@@ -26,6 +26,8 @@ import java.security.spec.ECPoint;
 import java.security.spec.EllipticCurve;
 
 /**
+ * 秘钥生成工具
+ *
  * @author Joe Grandja
  * @since 2.0.0
  */

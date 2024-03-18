@@ -28,11 +28,15 @@ import java.time.Instant;
 import java.util.concurrent.TimeUnit;
 
 /**
+ * 表 oauth2_authorization 的 Redis 实现
+ *
  * @author xuxiaowei
  * @since 2.0.0
  */
 @Slf4j
 public class RedisOAuth2AuthorizationService implements OAuth2AuthorizationService {
+
+	public static final String TABLE_NAME = "oauth2_authorization";
 
 	private final JdbcOAuth2AuthorizationService jdbcOAuth2AuthorizationService;
 
@@ -298,12 +302,12 @@ public class RedisOAuth2AuthorizationService implements OAuth2AuthorizationServi
 
 	public String idKey(String id) {
 		String prefix = properties.getPrefix();
-		return prefix + ":oauth2_authorization:id:" + id;
+		return String.format("%s:%s:id:%s", prefix, TABLE_NAME, id);
 	}
 
 	public String tokenKey(String token, OAuth2TokenType tokenType) {
 		String prefix = properties.getPrefix();
-		return prefix + ":oauth2_authorization:token:" + tokenType.getValue() + ":" + token;
+		return String.format("%s:%s:token:%s:%s", prefix, TABLE_NAME, tokenType.getValue(), token);
 	}
 
 	public String codeTokenKey(String token, OAuth2TokenType tokenType) {

@@ -10,6 +10,8 @@ import java.util.HashMap;
 import java.util.Map;
 
 /**
+ * 仅用于自动化测试登陆完成时测试
+ *
  * @author xuxiaowei
  * @since 2.0.0
  */

@@ -24,6 +24,7 @@ import org.springframework.security.crypto.factory.PasswordEncoderFactories;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.security.oauth2.core.AuthorizationGrantType;
 import org.springframework.security.oauth2.core.ClientAuthenticationMethod;
+import org.springframework.security.oauth2.core.endpoint.OAuth2ParameterNames;
 import org.springframework.security.oauth2.core.oidc.OidcScopes;
 import org.springframework.security.oauth2.server.authorization.client.RegisteredClient;
 import org.springframework.security.oauth2.server.authorization.settings.ClientSettings;
@@ -43,8 +44,11 @@ import static cn.com.xuxiaowei.boot.oauth2.SpringSecurityOauth2AuthorizationServ
 import static cn.com.xuxiaowei.boot.oauth2.SpringSecurityOauth2AuthorizationServerRedisApplication.username;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
+import static org.springframework.security.oauth2.core.AuthorizationGrantType.AUTHORIZATION_CODE;
 
 /**
+ * OAuth 2.1 Redis 实现的 授权码模式 集成测试类
+ *
  * @author xuxiaowei
  * @since 2.0.0
  */
@@ -74,12 +78,13 @@ class AuthorizationCodeTests {
 		String clientSecret = UUID.randomUUID().toString();
 		String encode = passwordEncoder.encode(clientSecret);
 
+		// 创建随机客户
 		RegisteredClient registeredClient = RegisteredClient.withId(id)
 			.clientId(clientId)
 			.clientSecret(encode)
 			.clientSecretExpiresAt(Instant.now().plus(3650, ChronoUnit.DAYS))
 			.clientAuthenticationMethod(ClientAuthenticationMethod.CLIENT_SECRET_BASIC)
-			.authorizationGrantType(AuthorizationGrantType.AUTHORIZATION_CODE)
+			.authorizationGrantType(AUTHORIZATION_CODE)
 			.authorizationGrantType(AuthorizationGrantType.REFRESH_TOKEN)
 			.authorizationGrantType(AuthorizationGrantType.CLIENT_CREDENTIALS)
 			.redirectUri("http://127.0.0.1:8080/login/oauth2/code/messaging-client-oidc")
@@ -89,29 +94,35 @@ class AuthorizationCodeTests {
 			.scope(OidcScopes.PROFILE)
 			.scope("message.read")
 			.scope("message.write")
+			// 客户配置：需要用户手动授权
 			.clientSettings(ClientSettings.builder().requireAuthorizationConsent(true).build())
 			.build();
 
+		// 保存随机客户：保存到 Redis、H2 数据库中
 		redisRegisteredClientRepository.save(registeredClient);
 
 		String redirectUri = "https://home.baidu.com/home/index/contact_us";
 		// String scope = "openid profile message.read message.write";
 		String scope = "profile message.read message.write";
 
+		// 循环多次，使用授权码模式授权，验证手动授权
 		for (int i = 0; i < 3; i++) {
 			String state = UUID.randomUUID().toString();
 
 			HtmlPage loginPage = webClient.getPage("/login");
 
+			// 输入用户名、密码
 			HtmlInput usernameInput = loginPage.querySelector("input[name=\"username\"]");
 			HtmlInput passwordInput = loginPage.querySelector("input[name=\"password\"]");
 			usernameInput.type(username);
 			passwordInput.type(password);
 
+			// 登录
 			HtmlButton signInButton = loginPage.querySelector("button");
 			Page signInPage = signInButton.click();
 			log.info("signIn Page URL: {}", signInPage.getUrl());
 
+			// 访问授权地址
 			HtmlPage authorize = webClient.getPage(
 					String.format("/oauth2/authorize?client_id=%s&redirect_uri=%s&response_type=code&scope=%s&state=%s",
 							clientId, redirectUri, scope, state));
@@ -121,44 +132,58 @@ class AuthorizationCodeTests {
 
 			String url;
 			if (authorizeUrl.startsWith(redirectUri)) {
+				// 若本次授权范围已在历史授权范围内确认过，则自动授权
 				url = authorizeUrl;
 			}
 			else {
+				// 首次访问授权地址，需要手动选择授权范围
 				HtmlCheckBoxInput profile = authorize.querySelector("input[id=\"profile\"]");
 				HtmlCheckBoxInput messageRead = authorize.querySelector("input[id=\"message.read\"]");
 				HtmlCheckBoxInput messageWrite = authorize.querySelector("input[id=\"message.write\"]");
 				HtmlButton submitButton = authorize.querySelector("button");
 
+				// 勾选授权范围
 				profile.setChecked(true);
 				messageRead.setChecked(true);
 				messageWrite.setChecked(true);
 
+				// 授权
 				Page authorized = submitButton.click();
 				url = authorized.getUrl().toString();
 				log.info("authorized URL: {}", url);
 			}
 
+			// 解析授权码
 			UriTemplate uriTemplate = new UriTemplate(String.format("%s?code={code}&state={state}", redirectUri));
 			Map<String, String> match = uriTemplate.match(url);
 			String code = match.get("code");
 
+			// 获取 Token URL
 			String tokenUrl = String.format("http://127.0.0.1:%d/oauth2/token", serverPort);
 
 			ObjectMapper objectMapper = new ObjectMapper();
 			ObjectWriter objectWriter = objectMapper.writerWithDefaultPrettyPrinter();
 
+			// 获取 Token
 			Map<?, ?> token = getToken(clientId, clientSecret, code, redirectUri, tokenUrl);
 			log.info("token:\n{}", objectWriter.writeValueAsString(token));
 
-			assertNotNull(token.get("access_token"));
-			assertNotNull(token.get("refresh_token"));
-			assertNotNull(token.get("scope"));
-			// assertNotNull(token.get("id_token"));
-			assertNotNull(token.get("token_type"));
-			assertNotNull(token.get("expires_in"));
+			// 返回值
+			// 授权 Token
+			assertNotNull(token.get(OAuth2ParameterNames.ACCESS_TOKEN));
+			// 使用授权码授权时，并且客户支持刷新 Token，则返回 refresh_token
+			assertNotNull(token.get(OAuth2ParameterNames.REFRESH_TOKEN));
+			// 授权范围
+			assertNotNull(token.get(OAuth2ParameterNames.SCOPE));
+			// 授权范围包含 openid 时，会返回 id_token
+			// assertNotNull(token.get(RedisConstants.ID_TOKEN));
+			// 授权类型
+			assertNotNull(token.get(OAuth2ParameterNames.TOKEN_TYPE));
+			// 过期时间
+			assertNotNull(token.get(OAuth2ParameterNames.EXPIRES_IN));
 
-			String accessToken = token.get("access_token").toString();
-
+			// 验证 授权 Token
+			String accessToken = token.get(OAuth2ParameterNames.ACCESS_TOKEN).toString();
 			RestTemplate restTemplate = new RestTemplate();
 			@SuppressWarnings("all")
 			ResponseEntity<Map> entity = restTemplate.getForEntity(
@@ -172,34 +197,46 @@ class AuthorizationCodeTests {
 
 			log.info("\n{}", objectWriter.writeValueAsString(response));
 
+			// 验证 接口返回数据
 			assertEquals("徐晓伟", response.get("title"));
 
-			String refreshToken = token.get("refresh_token").toString();
-
+			// 验证刷新 Token
+			String refreshToken = token.get(OAuth2ParameterNames.REFRESH_TOKEN).toString();
 			Map<?, ?> refresh = refreshToken(clientId, clientSecret, refreshToken, tokenUrl);
 
 			assertNotNull(refresh);
 
 			log.info("refresh:\n{}", objectWriter.writeValueAsString(refresh));
 
-			assertNotNull(refresh.get("access_token"));
-			assertNotNull(refresh.get("refresh_token"));
-			assertNotNull(refresh.get("scope"));
-			// assertNotNull(refresh.get("id_token"));
-			assertNotNull(refresh.get("token_type"));
-			assertNotNull(refresh.get("expires_in"));
+			// 返回值
+			// 授权 Token
+			assertNotNull(refresh.get(OAuth2ParameterNames.ACCESS_TOKEN));
+			// 使用授权码授权时，并且客户支持刷新 Token，则返回 refresh_token
+			assertNotNull(refresh.get(OAuth2ParameterNames.REFRESH_TOKEN));
+			// 授权范围
+			assertNotNull(refresh.get(OAuth2ParameterNames.SCOPE));
+			// 授权范围包含 openid 时，会返回 id_token
+			// assertNotNull(refresh.get(RedisConstants.ID_TOKEN));
+			// 授权类型
+			assertNotNull(refresh.get(OAuth2ParameterNames.TOKEN_TYPE));
+			// 过期时间
+			assertNotNull(refresh.get(OAuth2ParameterNames.EXPIRES_IN));
 		}
 	}
 
 	private Map<?, ?> getToken(String clientId, String clientSecret, String code, String redirectUri, String tokenUrl) {
 		RestTemplate restTemplate = new RestTemplate();
 		HttpHeaders httpHeaders = new HttpHeaders();
+		// 使用 form 提交数据
 		httpHeaders.setContentType(MediaType.APPLICATION_FORM_URLENCODED);
 		httpHeaders.setBasicAuth(clientId, clientSecret);
 		MultiValueMap<String, String> requestBody = new LinkedMultiValueMap<>();
-		requestBody.put("code", Collections.singletonList(code));
-		requestBody.put("grant_type", Collections.singletonList("authorization_code"));
-		requestBody.put("redirect_uri", Collections.singletonList(redirectUri));
+		// form 表达数据
+		// form 表达数据的值是 List
+		requestBody.put(OAuth2ParameterNames.CODE, Collections.singletonList(code));
+		requestBody.put(OAuth2ParameterNames.GRANT_TYPE,
+				Collections.singletonList(AuthorizationGrantType.AUTHORIZATION_CODE.getValue()));
+		requestBody.put(OAuth2ParameterNames.REDIRECT_URI, Collections.singletonList(redirectUri));
 		HttpEntity<MultiValueMap<String, String>> httpEntity = new HttpEntity<>(requestBody, httpHeaders);
 
 		return restTemplate.postForObject(tokenUrl, httpEntity, Map.class);
@@ -208,11 +245,14 @@ class AuthorizationCodeTests {
 	private Map<?, ?> refreshToken(String clientId, String clientSecret, String refreshToken, String tokenUrl) {
 		RestTemplate restTemplate = new RestTemplate();
 		HttpHeaders httpHeaders = new HttpHeaders();
+		// 使用 form 提交数据
 		httpHeaders.setContentType(MediaType.APPLICATION_FORM_URLENCODED);
 		httpHeaders.setBasicAuth(clientId, clientSecret);
 		MultiValueMap<String, String> requestBody = new LinkedMultiValueMap<>();
-		requestBody.put("refresh_token", Collections.singletonList(refreshToken));
-		requestBody.put("grant_type", Collections.singletonList("refresh_token"));
+		// form 表达数据
+		// form 表达数据的值是 List
+		requestBody.put(OAuth2ParameterNames.REFRESH_TOKEN, Collections.singletonList(refreshToken));
+		requestBody.put(OAuth2ParameterNames.GRANT_TYPE, Collections.singletonList(OAuth2ParameterNames.REFRESH_TOKEN));
 		HttpEntity<MultiValueMap<String, String>> httpEntity = new HttpEntity<>(requestBody, httpHeaders);
 
 		return restTemplate.postForObject(tokenUrl, httpEntity, Map.class);

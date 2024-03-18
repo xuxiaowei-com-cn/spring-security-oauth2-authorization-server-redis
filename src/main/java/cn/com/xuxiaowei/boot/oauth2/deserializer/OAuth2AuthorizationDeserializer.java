@@ -1,5 +1,6 @@
 package cn.com.xuxiaowei.boot.oauth2.deserializer;
 
+import cn.com.xuxiaowei.boot.oauth2.constant.RedisConstants;
 import com.fasterxml.jackson.core.JsonParser;
 import com.fasterxml.jackson.core.JsonToken;
 import com.fasterxml.jackson.core.TreeNode;
@@ -68,32 +69,32 @@ public class OAuth2AuthorizationDeserializer extends StdDeserializer<OAuth2Autho
 				// 下一个值
 				p.nextToken();
 				switch (fieldName) {
-					case "id":
+					case RedisConstants.ID:
 						id = p.getText();
 						break;
-					case "registeredClientId":
+					case RedisConstants.REGISTERED_CLIENT_ID:
 						registeredClientBuilder = RegisteredClient.withId(p.getText());
 						break;
-					case "principalName":
+					case RedisConstants.PRINCIPAL_NAME:
 						principalName = p.getText();
 						break;
-					case "authorizationGrantType":
+					case RedisConstants.AUTHORIZATION_GRANT_TYPE:
 						authorizationGrantType = OBJECT_MAPPER.convertValue(
 								p.readValueAs(Map.class).values().iterator().next(), AuthorizationGrantType.class);
 						break;
-					case "authorizedScopes":
+					case RedisConstants.AUTHORIZED_SCOPES:
 						authorizedScopes = p.readValueAs(new TypeReference<Set<String>>() {
 						});
 						break;
-					case "attributes":
+					case RedisConstants.ATTRIBUTES:
 						attributesMap = OBJECT_MAPPER.convertValue(p.readValueAsTree(),
 								new TypeReference<Map<String, Object>>() {
 								});
 						break;
-					case "accessToken":
+					case RedisConstants.ACCESS_TOKEN:
 						accessToken = accessToken(p);
 						break;
-					case "refreshToken":
+					case RedisConstants.REFRESH_TOKEN:
 						refreshToken = refreshToken(p);
 						break;
 
@@ -110,19 +111,20 @@ public class OAuth2AuthorizationDeserializer extends StdDeserializer<OAuth2Autho
 				new TypeReference<Map<String, Object>>() {
 				});
 
-		String clientId = oauth2AuthorizationRequestMap.get("clientId").toString();
+		String clientId = oauth2AuthorizationRequestMap.get(RedisConstants.CLIENT_ID).toString();
 		registeredClientBuilder.clientId(clientId);
 
-		String redirectUri = oauth2AuthorizationRequestMap.get("redirectUri").toString();
+		String redirectUri = oauth2AuthorizationRequestMap.get(RedisConstants.REDIRECT_URI).toString();
 		registeredClientBuilder.redirectUri(redirectUri);
 
 		Object state = oauth2AuthorizationRequestMap.get(OAuth2ParameterNames.STATE);
-		Object scopes = oauth2AuthorizationRequestMap.get("scopes");
+		Object scopes = oauth2AuthorizationRequestMap.get(RedisConstants.SCOPES);
 
 		OAuth2AuthorizationRequest oauth2AuthorizationRequest = OAuth2AuthorizationRequest.authorizationCode()
-			.authorizationRequestUri(oauth2AuthorizationRequestMap.get("authorizationRequestUri").toString())
-			.authorizationUri(oauth2AuthorizationRequestMap.get("authorizationUri").toString())
-			.redirectUri(oauth2AuthorizationRequestMap.get("redirectUri").toString())
+			.authorizationRequestUri(
+					oauth2AuthorizationRequestMap.get(RedisConstants.AUTHORIZATION_REQUEST_URI).toString())
+			.authorizationUri(oauth2AuthorizationRequestMap.get(RedisConstants.AUTHORIZATION_URI).toString())
+			.redirectUri(oauth2AuthorizationRequestMap.get(RedisConstants.REDIRECT_URI).toString())
 			.clientId(clientId)
 			.state(state == null ? null : state.toString())
 			.scopes(scopes == null ? null : new HashSet<>((List<String>) scopes))
@@ -251,6 +253,8 @@ public class OAuth2AuthorizationDeserializer extends StdDeserializer<OAuth2Autho
 	}
 
 	/**
+	 * 仅用于快速解析数据
+	 *
 	 * @author xuxiaowei
 	 * @since 2.0.0
 	 */
@@ -274,6 +278,8 @@ public class OAuth2AuthorizationDeserializer extends StdDeserializer<OAuth2Autho
 	}
 
 	/**
+	 * 仅用于快速解析数据
+	 *
 	 * @author xuxiaowei
 	 * @since 2.0.0
 	 */
@@ -317,6 +323,8 @@ public class OAuth2AuthorizationDeserializer extends StdDeserializer<OAuth2Autho
 	}
 
 	/**
+	 * 仅用于快速解析数据
+	 *
 	 * @author xuxiaowei
 	 * @since 2.0.0
 	 */
@@ -338,6 +346,8 @@ public class OAuth2AuthorizationDeserializer extends StdDeserializer<OAuth2Autho
 	}
 
 	/**
+	 * 仅用于快速解析数据
+	 *
 	 * @author xuxiaowei
 	 * @since 2.0.0
 	 */
@@ -351,6 +361,8 @@ public class OAuth2AuthorizationDeserializer extends StdDeserializer<OAuth2Autho
 	}
 
 	/**
+	 * 仅用于快速解析数据
+	 *
 	 * @author xuxiaowei
 	 * @since 2.0.0
 	 */

@@ -38,6 +38,12 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
+/**
+ * {@link OAuth2AuthorizationConsent} 反序列化
+ *
+ * @since 2.0.0
+ * @author xuxiaowei
+ */
 public class OAuth2AuthorizationConsentDeserializer extends StdDeserializer<OAuth2AuthorizationConsent> {
 
 	private final ObjectMapper objectMapper = new ObjectMapper();
