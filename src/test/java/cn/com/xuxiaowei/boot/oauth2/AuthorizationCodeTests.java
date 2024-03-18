@@ -155,7 +155,7 @@ class AuthorizationCodeTests {
 			// 解析授权码
 			UriTemplate uriTemplate = new UriTemplate(String.format("%s?code={code}&state={state}", redirectUri));
 			Map<String, String> match = uriTemplate.match(url);
-			String code = match.get("code");
+			String code = match.get(OAuth2ParameterNames.CODE);
 
 			// 获取 Token URL
 			String tokenUrl = String.format("http://127.0.0.1:%d/oauth2/token", serverPort);
@@ -232,9 +232,10 @@ class AuthorizationCodeTests {
 		MultiValueMap<String, String> requestBody = new LinkedMultiValueMap<>();
 		// form 表达数据
 		// form 表达数据的值是 List
-		requestBody.put("code", Collections.singletonList(code));
-		requestBody.put(OAuth2ParameterNames.GRANT_TYPE, Collections.singletonList("authorization_code"));
-		requestBody.put("redirect_uri", Collections.singletonList(redirectUri));
+		requestBody.put(OAuth2ParameterNames.CODE, Collections.singletonList(code));
+		requestBody.put(OAuth2ParameterNames.GRANT_TYPE,
+				Collections.singletonList(AuthorizationGrantType.AUTHORIZATION_CODE.getValue()));
+		requestBody.put(OAuth2ParameterNames.REDIRECT_URI, Collections.singletonList(redirectUri));
 		HttpEntity<MultiValueMap<String, String>> httpEntity = new HttpEntity<>(requestBody, httpHeaders);
 
 		return restTemplate.postForObject(tokenUrl, httpEntity, Map.class);
