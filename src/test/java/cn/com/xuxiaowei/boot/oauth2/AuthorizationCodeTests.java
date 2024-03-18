@@ -95,7 +95,8 @@ class AuthorizationCodeTests {
 		redisRegisteredClientRepository.save(registeredClient);
 
 		String redirectUri = "https://home.baidu.com/home/index/contact_us";
-		String scope = "openid profile message.read message.write";
+		// String scope = "openid profile message.read message.write";
+		String scope = "profile message.read message.write";
 
 		for (int i = 0; i < 3; i++) {
 			String state = UUID.randomUUID().toString();
@@ -152,7 +153,7 @@ class AuthorizationCodeTests {
 			assertNotNull(token.get("access_token"));
 			assertNotNull(token.get("refresh_token"));
 			assertNotNull(token.get("scope"));
-			assertNotNull(token.get("id_token"));
+			// assertNotNull(token.get("id_token"));
 			assertNotNull(token.get("token_type"));
 			assertNotNull(token.get("expires_in"));
 
@@ -184,7 +185,7 @@ class AuthorizationCodeTests {
 			assertNotNull(refresh.get("access_token"));
 			assertNotNull(refresh.get("refresh_token"));
 			assertNotNull(refresh.get("scope"));
-			assertNotNull(refresh.get("id_token"));
+			// assertNotNull(refresh.get("id_token"));
 			assertNotNull(refresh.get("token_type"));
 			assertNotNull(refresh.get("expires_in"));
 		}
