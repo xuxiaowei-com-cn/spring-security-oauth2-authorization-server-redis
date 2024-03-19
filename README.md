@@ -30,6 +30,8 @@
 
 ## 项目说明
 
+[![Codacy Badge](https://api.codacy.com/project/badge/Grade/18d4bfbe78224ff6ace301638e386b81)](https://app.codacy.com/gh/xuxiaowei-com-cn/spring-security-oauth2-authorization-server-redis?utm_source=github.com&utm_medium=referral&utm_content=xuxiaowei-com-cn/spring-security-oauth2-authorization-server-redis&utm_campaign=Badge_Grade)
+
 1. 本项目为重构项目，与原始分支存在较大差异
 2. 重构后的代码包含完善的 OAuth 2.1 自动化测试
 3. [CodeCov 代码覆盖率](https://app.codecov.io/gh/xuxiaowei-com-cn/spring-security-oauth2-authorization-server-redis/)
