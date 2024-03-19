@@ -10,10 +10,12 @@
     <a target="_blank" href="https://qm.qq.com/cgi-bin/qm/qr?k=ZieC6s1WB4njfVbrDHYgoNS8YpT26VtF&jump_from=webapi">
         <img alt="QQ群" src="https://img.shields.io/badge/QQ群-696503132-blue.svg"/>
     </a>
-    <a target="_blank" href="https://codecov.io/gh/xuxiaowei-com-cn/spring-security-oauth2-authorization-server-redis" > 
-        <img alt="Codacy Badge" src="https://codecov.io/gh/xuxiaowei-com-cn/spring-security-oauth2-authorization-server-redis/graph/badge.svg?token=LNL2140A4F"/> 
+    <a target="_blank" href="https://app.codacy.com/gh/xuxiaowei-com-cn/spring-security-oauth2-authorization-server-redis/dashboard?utm_source=gh&utm_medium=referral&utm_content=&utm_campaign=Badge_grade">
+        <img alt="Codacy Badge" src="https://app.codacy.com/project/badge/Grade/701d1c578276435f86a6cc0be97f91cb"/>
     </a>
-
+    <a target="_blank" href="https://codecov.io/gh/xuxiaowei-com-cn/spring-security-oauth2-authorization-server-redis" > 
+        <img alt="Codecov Badge" src="https://codecov.io/gh/xuxiaowei-com-cn/spring-security-oauth2-authorization-server-redis/graph/badge.svg?token=LNL2140A4F"/> 
+    </a>
 </div>
 
 <p></p>
