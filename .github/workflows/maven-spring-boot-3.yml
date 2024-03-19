@@ -61,3 +61,14 @@ jobs:
 
       - name: Test
         run: mvn test -DskipTests=false
+
+      - name: JaCoCo Report
+        if: ${{ matrix.redis-version == 'redis:6.0.20' }}
+        run: >-
+          mvn jacoco:report
+
+      - name: Upload coverage reports to Codecov
+        uses: codecov/codecov-action@v4
+        if: ${{ matrix.redis-version == 'redis:6.0.20' }}
+        with:
+          token: ${{ secrets.CODECOV_TOKEN }}
