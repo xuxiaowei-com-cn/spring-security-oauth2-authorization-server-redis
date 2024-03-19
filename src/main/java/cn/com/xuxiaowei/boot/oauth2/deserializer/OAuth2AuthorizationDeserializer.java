@@ -200,15 +200,15 @@ public class OAuth2AuthorizationDeserializer extends StdDeserializer<OAuth2Autho
 		}
 
 		Token token = oauth2Token.getToken();
-		Map<String, Object> metadata = oauth2Token.getMetadata();
-		boolean isActive = oauth2Token.isActive();
-		boolean isExpired = oauth2Token.isExpired();
-		Map<String, Object> claims = oauth2Token.getClaims();
-		boolean isBeforeUse = oauth2Token.isBeforeUse();
-		boolean isInvalidated = oauth2Token.isInvalidated();
+		// Map<String, Object> metadata = oauth2Token.getMetadata();
+		// boolean isActive = oauth2Token.isActive();
+		// boolean isExpired = oauth2Token.isExpired();
+		// Map<String, Object> claims = oauth2Token.getClaims();
+		// boolean isBeforeUse = oauth2Token.isBeforeUse();
+		// boolean isInvalidated = oauth2Token.isInvalidated();
 
 		String tokenValue = token.getTokenValue();
-		Map<String, String> tokenTypeMap = token.getTokenType();
+		// Map<String, String> tokenTypeMap = token.getTokenType();
 		Set<String> scopes = token.getScopes();
 		Long issuedAtSecond = token.getIssuedAtSecond();
 		Long issuedAtNano = token.getIssuedAtNano();
@@ -231,16 +231,16 @@ public class OAuth2AuthorizationDeserializer extends StdDeserializer<OAuth2Autho
 		}
 
 		Token token = oauth2Token.getToken();
-		Map<String, Object> metadata = oauth2Token.getMetadata();
-		boolean isActive = oauth2Token.isActive();
-		boolean isExpired = oauth2Token.isExpired();
-		Map<String, Object> claims = oauth2Token.getClaims();
-		boolean isBeforeUse = oauth2Token.isBeforeUse();
-		boolean isInvalidated = oauth2Token.isInvalidated();
+		// Map<String, Object> metadata = oauth2Token.getMetadata();
+		// boolean isActive = oauth2Token.isActive();
+		// boolean isExpired = oauth2Token.isExpired();
+		// Map<String, Object> claims = oauth2Token.getClaims();
+		// boolean isBeforeUse = oauth2Token.isBeforeUse();
+		// boolean isInvalidated = oauth2Token.isInvalidated();
 
 		String tokenValue = token.getTokenValue();
-		Map<String, String> tokenTypeMap = token.getTokenType();
-		Set<String> scopes = token.getScopes();
+		// Map<String, String> tokenTypeMap = token.getTokenType();
+		// Set<String> scopes = token.getScopes();
 		Long issuedAtSecond = token.getIssuedAtSecond();
 		Long issuedAtNano = token.getIssuedAtNano();
 		Long expiresAtSecond = token.getExpiresAtSecond();
