@@ -61,3 +61,8 @@ jobs:
 
       - name: Test
         run: mvn test -DskipTests=false
+
+      - name: JaCoCo Report
+        if: ${{ matrix.redis-version == 'redis:6.0.20' }}
+        run: >-
+          mvn jacoco:report
