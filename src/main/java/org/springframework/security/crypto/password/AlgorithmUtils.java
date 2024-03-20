@@ -4,20 +4,29 @@ import lombok.Getter;
 import org.springframework.security.crypto.codec.Hex;
 import org.springframework.security.crypto.codec.Utf8;
 
+import java.util.Objects;
+
 /**
  * @author xuxiaowei
  * @since 0.0.1
  */
-public class PasswordUtils implements PasswordEncoder {
+public class AlgorithmUtils implements PasswordEncoder {
 
 	private final Digester digester;
 
-	public PasswordUtils(Algorithm algorithm) {
+	public AlgorithmUtils(Algorithm algorithm) {
+		if (algorithm == null || Algorithm.NULL.equals(algorithm)) {
+			this.digester = null;
+			return;
+		}
 		this.digester = new Digester(algorithm.getValue(), 1);
 	}
 
 	@Override
 	public String encode(CharSequence rawPassword) {
+		if (digester == null) {
+			return rawPassword.toString();
+		}
 		byte[] digest = this.digester.digest(Utf8.encode(rawPassword));
 		return encode(digest);
 	}
@@ -28,6 +37,9 @@ public class PasswordUtils implements PasswordEncoder {
 
 	@Override
 	public boolean matches(CharSequence rawPassword, String encodedPassword) {
+		if (digester == null) {
+			return Objects.equals(rawPassword, encodedPassword);
+		}
 		String rawPasswordEncoded = digest(rawPassword);
 		return PasswordEncoderUtils.equals(encodedPassword, rawPasswordEncoded);
 	}
@@ -43,6 +55,8 @@ public class PasswordUtils implements PasswordEncoder {
 	 */
 	@Getter
 	public enum Algorithm {
+
+		NULL(null),
 
 		MD5("MD5"),
 

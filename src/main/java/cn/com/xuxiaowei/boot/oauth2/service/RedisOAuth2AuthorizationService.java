@@ -18,7 +18,7 @@ import org.apache.commons.lang3.StringUtils;
 import org.springframework.data.redis.core.StringRedisTemplate;
 import org.springframework.jdbc.core.JdbcOperations;
 import org.springframework.jdbc.support.lob.LobHandler;
-import org.springframework.security.crypto.password.PasswordUtils;
+import org.springframework.security.crypto.password.AlgorithmUtils;
 import org.springframework.security.oauth2.core.AuthorizationGrantType;
 import org.springframework.security.oauth2.core.OAuth2AccessToken;
 import org.springframework.security.oauth2.core.OAuth2RefreshToken;
@@ -344,11 +344,12 @@ public class RedisOAuth2AuthorizationService implements OAuth2AuthorizationServi
 
 	public String tokenKey(OAuth2TokenType tokenType, String token) {
 		String prefix = properties.getPrefix();
+		AlgorithmUtils.Algorithm algorithm = properties.getAlgorithm();
 
 		// 用于缩短 key
-		PasswordUtils passwordUtils = new PasswordUtils(PasswordUtils.Algorithm.MD5);
+		AlgorithmUtils algorithmUtils = new AlgorithmUtils(algorithm);
 
-		String encode = passwordUtils.encode(token);
+		String encode = algorithmUtils.encode(token);
 
 		return String.format("%s:%s:%s:%s", prefix, TABLE_NAME, tokenType.getValue(), encode);
 	}
