@@ -4,7 +4,9 @@ import cn.com.xuxiaowei.boot.oauth2.constant.RedisConstants;
 import cn.com.xuxiaowei.boot.oauth2.deserializer.AuthorizationGrantTypeDeserializer;
 import cn.com.xuxiaowei.boot.oauth2.deserializer.OAuth2AuthorizationDeserializer;
 import cn.com.xuxiaowei.boot.oauth2.properties.SpringAuthorizationServerRedisProperties;
+import cn.com.xuxiaowei.boot.oauth2.utils.RedisRuntimeException;
 import cn.com.xuxiaowei.boot.oauth2.utils.RedisUtils;
+import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.module.SimpleModule;
 import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule;
@@ -16,15 +18,21 @@ import org.apache.commons.lang3.StringUtils;
 import org.springframework.data.redis.core.StringRedisTemplate;
 import org.springframework.jdbc.core.JdbcOperations;
 import org.springframework.jdbc.support.lob.LobHandler;
+import org.springframework.security.crypto.password.PasswordUtils;
 import org.springframework.security.oauth2.core.AuthorizationGrantType;
 import org.springframework.security.oauth2.core.OAuth2AccessToken;
 import org.springframework.security.oauth2.core.OAuth2RefreshToken;
 import org.springframework.security.oauth2.core.endpoint.OAuth2ParameterNames;
 import org.springframework.security.oauth2.core.oidc.OidcIdToken;
 import org.springframework.security.oauth2.server.authorization.*;
+import org.springframework.security.oauth2.server.authorization.client.RegisteredClient;
 import org.springframework.security.oauth2.server.authorization.client.RegisteredClientRepository;
+import org.springframework.security.oauth2.server.authorization.settings.TokenSettings;
 
+import java.time.Duration;
 import java.time.Instant;
+import java.util.HashMap;
+import java.util.Map;
 import java.util.concurrent.TimeUnit;
 
 /**
@@ -40,6 +48,8 @@ public class RedisOAuth2AuthorizationService implements OAuth2AuthorizationServi
 
 	private final JdbcOAuth2AuthorizationService jdbcOAuth2AuthorizationService;
 
+	private final RegisteredClientRepository registeredClientRepository;
+
 	private final StringRedisTemplate stringRedisTemplate;
 
 	private final SpringAuthorizationServerRedisProperties properties;
@@ -53,6 +63,7 @@ public class RedisOAuth2AuthorizationService implements OAuth2AuthorizationServi
 			SpringAuthorizationServerRedisProperties properties) {
 		this.jdbcOAuth2AuthorizationService = new JdbcOAuth2AuthorizationService(jdbcOperations,
 				registeredClientRepository);
+		this.registeredClientRepository = registeredClientRepository;
 		this.stringRedisTemplate = stringRedisTemplate;
 		this.properties = properties;
 
@@ -64,6 +75,7 @@ public class RedisOAuth2AuthorizationService implements OAuth2AuthorizationServi
 			SpringAuthorizationServerRedisProperties properties, LobHandler lobHandler) {
 		this.jdbcOAuth2AuthorizationService = new JdbcOAuth2AuthorizationService(jdbcOperations,
 				registeredClientRepository, lobHandler);
+		this.registeredClientRepository = registeredClientRepository;
 		this.stringRedisTemplate = stringRedisTemplate;
 		this.properties = properties;
 
@@ -81,84 +93,58 @@ public class RedisOAuth2AuthorizationService implements OAuth2AuthorizationServi
 	@SneakyThrows
 	@Override
 	public void save(OAuth2Authorization authorization) {
-		jdbcOAuth2AuthorizationService.save(authorization);
-
-		long timeout = properties.getAuthorizationTimeout();
-
-		String json = objectMapper.writeValueAsString(authorization);
-
-		OAuth2Authorization.Token<OAuth2AuthorizationCode> oauth2AuthorizationCodeToken = authorization
-			.getToken(OAuth2AuthorizationCode.class);
-		OAuth2Authorization.Token<OidcIdToken> oidcIdTokenToken = authorization.getToken(OidcIdToken.class);
-
-		if (oauth2AuthorizationCodeToken != null) {
-
-			String string = objectMapper.writeValueAsString(oauth2AuthorizationCodeToken);
-
-			stringRedisTemplate.opsForValue()
-				.set(tokenKey(oauth2AuthorizationCodeToken.getToken().getTokenValue(),
-						new OAuth2TokenType(OAuth2ParameterNames.CODE)), string, timeout, TimeUnit.SECONDS);
-
-			stringRedisTemplate.opsForValue()
-				.set(codeTokenKey(oauth2AuthorizationCodeToken.getToken().getTokenValue(),
-						new OAuth2TokenType(OAuth2ParameterNames.CODE)), json, timeout, TimeUnit.SECONDS);
-		}
-
-		if (oidcIdTokenToken != null) {
-
-		}
-
-		String idKey = idKey(authorization.getId());
-
-		OAuth2Authorization.Token<OAuth2AccessToken> accessToken = authorization.getAccessToken();
-		if (accessToken != null) {
-			String tokenValue = accessToken.getToken().getTokenValue();
-			String tokenKey = tokenKey(tokenValue, OAuth2TokenType.ACCESS_TOKEN);
-
-			stringRedisTemplate.opsForValue().set(tokenKey, json, timeout, TimeUnit.SECONDS);
-		}
-
-		OAuth2Authorization.Token<OAuth2RefreshToken> refreshToken = authorization.getRefreshToken();
-		if (refreshToken != null) {
-			String tokenValue = refreshToken.getToken().getTokenValue();
-			String tokenKey = tokenKey(tokenValue, OAuth2TokenType.REFRESH_TOKEN);
-
-			stringRedisTemplate.opsForValue().set(tokenKey, json, timeout, TimeUnit.SECONDS);
-		}
-
-		if (accessToken == null && refreshToken == null) {
-			Object state = authorization.getAttribute(OAuth2ParameterNames.STATE);
-			if (state != null) {
-				String tokenKey = tokenKey(state.toString(), new OAuth2TokenType(OAuth2ParameterNames.STATE));
-
-				stringRedisTemplate.opsForValue().set(tokenKey, json, timeout, TimeUnit.SECONDS);
-			}
-		}
-
-		stringRedisTemplate.opsForValue().set(idKey, json, timeout, TimeUnit.SECONDS);
+		save(authorization, true);
 	}
 
 	@Override
 	public void remove(OAuth2Authorization authorization) {
 		jdbcOAuth2AuthorizationService.remove(authorization);
 
-		String idKey = idKey(authorization.getId());
+		String id = authorization.getId();
+		String idKey = idKey(id);
+
+		stringRedisTemplate.delete(idKey);
+
+		OAuth2Authorization.Token<OAuth2AuthorizationCode> oauth2AuthorizationCodeToken = authorization
+			.getToken(OAuth2AuthorizationCode.class);
+		if (oauth2AuthorizationCodeToken != null) {
+			String tokenValue = oauth2AuthorizationCodeToken.getToken().getTokenValue();
+			String tokenKey = tokenKey(new OAuth2TokenType(OAuth2ParameterNames.CODE), tokenValue);
+
+			stringRedisTemplate.delete(tokenKey);
+		}
+
+		OAuth2Authorization.Token<OidcIdToken> oidcIdTokenToken = authorization.getToken(OidcIdToken.class);
+		if (oidcIdTokenToken != null) {
+			String tokenValue = oidcIdTokenToken.getToken().getTokenValue();
+			String tokenKey = tokenKey(new OAuth2TokenType(OidcIdToken.class.getSimpleName()), tokenValue);
+
+			stringRedisTemplate.delete(tokenKey);
+		}
 
 		OAuth2Authorization.Token<OAuth2AccessToken> accessToken = authorization.getAccessToken();
 		if (accessToken != null) {
 			String tokenValue = accessToken.getToken().getTokenValue();
-			String tokenKey = tokenKey(tokenValue, OAuth2TokenType.ACCESS_TOKEN);
+			String tokenKey = tokenKey(OAuth2TokenType.ACCESS_TOKEN, tokenValue);
+
 			stringRedisTemplate.delete(tokenKey);
 		}
 
 		OAuth2Authorization.Token<OAuth2RefreshToken> refreshToken = authorization.getRefreshToken();
 		if (refreshToken != null) {
 			String tokenValue = refreshToken.getToken().getTokenValue();
-			String tokenKey = tokenKey(tokenValue, OAuth2TokenType.REFRESH_TOKEN);
+			String tokenKey = tokenKey(OAuth2TokenType.REFRESH_TOKEN, tokenValue);
+
 			stringRedisTemplate.delete(tokenKey);
 		}
 
-		stringRedisTemplate.delete(idKey);
+		Object state = authorization.getAttribute(OAuth2ParameterNames.STATE);
+		if (state != null) {
+
+			String tokenKey = tokenKey(new OAuth2TokenType(OAuth2ParameterNames.STATE), state.toString());
+
+			stringRedisTemplate.delete(tokenKey);
+		}
 	}
 
 	@SneakyThrows
@@ -191,31 +177,13 @@ public class RedisOAuth2AuthorizationService implements OAuth2AuthorizationServi
 
 		if (json == null) {
 			authorization = jdbcOAuth2AuthorizationService.findById(id);
-
-			json = objectMapper.writeValueAsString(authorization);
-
-			if (authorization != null) {
-				OAuth2Authorization.Token<OAuth2AccessToken> accessToken = authorization.getAccessToken();
-				if (accessToken != null) {
-					String tokenValue = accessToken.getToken().getTokenValue();
-					String tokenKey = tokenKey(tokenValue, OAuth2TokenType.ACCESS_TOKEN);
-
-					stringRedisTemplate.opsForValue().set(tokenKey, json, timeout, TimeUnit.SECONDS);
-				}
-
-				OAuth2Authorization.Token<OAuth2RefreshToken> refreshToken = authorization.getRefreshToken();
-				if (refreshToken != null) {
-					String tokenValue = refreshToken.getToken().getTokenValue();
-					String tokenKey = tokenKey(tokenValue, OAuth2TokenType.REFRESH_TOKEN);
-
-					stringRedisTemplate.opsForValue().set(tokenKey, json, timeout, TimeUnit.SECONDS);
-				}
-
-				stringRedisTemplate.opsForValue().set(idKey, json, timeout, TimeUnit.SECONDS);
-			}
 		}
 		else {
 			authorization = objectMapper.readValue(json, OAuth2Authorization.class);
+		}
+
+		if (authorization != null) {
+			save(authorization, false);
 		}
 
 		return authorization;
@@ -225,79 +193,148 @@ public class RedisOAuth2AuthorizationService implements OAuth2AuthorizationServi
 	@Override
 	public OAuth2Authorization findByToken(String token, OAuth2TokenType tokenType) {
 
-		String tokenKey;
+		OAuth2Authorization authorization;
 
-		if (OAuth2ParameterNames.CODE.equals(tokenType.getValue())) {
-			tokenKey = codeTokenKey(token, new OAuth2TokenType(OAuth2ParameterNames.CODE));
+		if (new OAuth2TokenType(OAuth2ParameterNames.CODE).equals(tokenType)) {
+
+			String tokenKey = tokenKey(new OAuth2TokenType(OAuth2ParameterNames.CODE), token);
+
+			Map<Object, Object> entries = stringRedisTemplate.opsForHash().entries(tokenKey);
+
+			Object idValue = entries.get("id");
+			authorization = objectMapper.readValue(idValue.toString(), OAuth2Authorization.class);
+
+			// @formatter:off
+            Object authorizationCodeObj = entries.get(OAuth2AuthorizationCode.class.getSimpleName());
+            OAuth2AuthorizationDeserializer.OAuth2Token oauth2Token = objectMapper.readValue(authorizationCodeObj.toString(), OAuth2AuthorizationDeserializer.OAuth2Token.class);
+            OAuth2AuthorizationDeserializer.Token tokenCode = oauth2Token.getToken();
+            String tokenValue = tokenCode.getTokenValue();
+            Long issuedAtSecond = tokenCode.getIssuedAtSecond();
+            Long issuedAtNano = tokenCode.getIssuedAtNano();
+            Long expiresAtSecond = tokenCode.getExpiresAtSecond();
+            Long expiresAtNano = tokenCode.getExpiresAtNano();
+            Instant issuedAt = Instant.ofEpochSecond(issuedAtSecond, issuedAtNano);
+            Instant expiresAt = Instant.ofEpochSecond(expiresAtSecond, expiresAtNano);
+            OAuth2AuthorizationCode authorizationCode = new OAuth2AuthorizationCode(tokenValue, issuedAt, expiresAt);
+            authorization = OAuth2Authorization.from(authorization).token(authorizationCode).build();
+            // @formatter:on
+		}
+		else if (new OAuth2TokenType(OidcIdToken.class.getSimpleName()).equals(tokenType)) {
+
+			String tokenKey = tokenKey(new OAuth2TokenType(OidcIdToken.class.getSimpleName()), token);
+
+			Map<Object, Object> entries = stringRedisTemplate.opsForHash().entries(tokenKey);
+
+			Object idValue = entries.get("id");
+			authorization = objectMapper.readValue(idValue.toString(), OAuth2Authorization.class);
+
+			Object oidcIdTokenObj = entries.get(OidcIdToken.class.getSimpleName());
+			OidcIdToken oidcIdToken = objectMapper.readValue(oidcIdTokenObj.toString(), OidcIdToken.class);
+			authorization = OAuth2Authorization.from(authorization).token(oidcIdToken).build();
+		}
+		else if (OAuth2TokenType.ACCESS_TOKEN.equals(tokenType)) {
+			String tokenKey = tokenKey(OAuth2TokenType.ACCESS_TOKEN, token);
+
+			String json = stringRedisTemplate.opsForValue().get(tokenKey);
+			authorization = objectMapper.readValue(json, OAuth2Authorization.class);
+		}
+		else if (OAuth2TokenType.REFRESH_TOKEN.equals(tokenType)) {
+			String tokenKey = tokenKey(OAuth2TokenType.REFRESH_TOKEN, token);
+
+			String json = stringRedisTemplate.opsForValue().get(tokenKey);
+			authorization = objectMapper.readValue(json, OAuth2Authorization.class);
+		}
+		else if (new OAuth2TokenType(OAuth2ParameterNames.STATE).equals(tokenType)) {
+			String tokenKey = tokenKey(new OAuth2TokenType(OAuth2ParameterNames.STATE), token);
+
+			String json = stringRedisTemplate.opsForValue().get(tokenKey);
+			authorization = objectMapper.readValue(json, OAuth2Authorization.class);
 		}
 		else {
-			tokenKey = tokenKey(token, tokenType);
+
+			throw new RedisRuntimeException("不支持的类型：" + tokenType);
+		}
+
+		return authorization;
+	}
+
+	public void save(OAuth2Authorization authorization, boolean jdbc) throws JsonProcessingException {
+		if (jdbc) {
+			jdbcOAuth2AuthorizationService.save(authorization);
 		}
 
 		long timeout = properties.getAuthorizationTimeout();
 
-		String redisVersion = RedisUtils.redisVersion(stringRedisTemplate);
-		int compare = StringUtils.compare(redisVersion, RedisConstants.GETEX_VERSION);
+		String registeredClientId = authorization.getRegisteredClientId();
+		RegisteredClient registeredClient = registeredClientRepository.findById(registeredClientId);
 
-		String json;
+		String json = objectMapper.writeValueAsString(authorization);
 
-		if (compare < 0) {
-			log.warn("警告：Redis 版本低于 {}，不支持 GETEX（getAndExpire）命令", RedisConstants.GETEX_VERSION);
+		String id = authorization.getId();
+		String idKey = idKey(id);
 
-			json = stringRedisTemplate.opsForValue().get(tokenKey);
-		}
-		else {
-			json = stringRedisTemplate.opsForValue().getAndExpire(tokenKey, timeout, TimeUnit.SECONDS);
-		}
+		stringRedisTemplate.opsForValue().set(idKey, json, timeout, TimeUnit.SECONDS);
 
-		OAuth2Authorization authorization;
+		OAuth2Authorization.Token<OAuth2AuthorizationCode> oauth2AuthorizationCodeToken = authorization
+			.getToken(OAuth2AuthorizationCode.class);
+		if (oauth2AuthorizationCodeToken != null) {
+			String tokenValue = oauth2AuthorizationCodeToken.getToken().getTokenValue();
+			String authorizationCode = objectMapper.writeValueAsString(oauth2AuthorizationCodeToken);
+			String tokenKey = tokenKey(new OAuth2TokenType(OAuth2ParameterNames.CODE), tokenValue);
 
-		if (json == null) {
-			authorization = jdbcOAuth2AuthorizationService.findByToken(token, tokenType);
+			Map<String, String> map = new HashMap<>();
+			map.put("id", json);
+			map.put(OAuth2AuthorizationCode.class.getSimpleName(), authorizationCode);
 
-			if (authorization != null) {
-
-				json = objectMapper.writeValueAsString(authorization);
-
-				// @formatter:off
-				stringRedisTemplate.opsForValue().set(idKey(authorization.getId()), json, timeout, TimeUnit.SECONDS);
-				stringRedisTemplate.opsForValue().set(tokenKey(token, OAuth2TokenType.REFRESH_TOKEN), json, timeout, TimeUnit.SECONDS);
-				stringRedisTemplate.opsForValue().set(tokenKey(token, OAuth2TokenType.ACCESS_TOKEN), json, timeout, TimeUnit.SECONDS);
-				// @formatter:on
-			}
-		}
-		else {
-			authorization = objectMapper.readValue(json, OAuth2Authorization.class);
-
-			if (OAuth2ParameterNames.CODE.equals(tokenType.getValue())) {
-
-				String string = stringRedisTemplate.opsForValue().get(tokenKey(token, tokenType));
-
-				OAuth2AuthorizationDeserializer.OAuth2Token oauth2Token = objectMapper.readValue(string,
-						OAuth2AuthorizationDeserializer.OAuth2Token.class);
-
-				OAuth2AuthorizationDeserializer.Token tokenCode = oauth2Token.getToken();
-				String tokenValue = tokenCode.getTokenValue();
-				Long issuedAtSecond = tokenCode.getIssuedAtSecond();
-				Long issuedAtNano = tokenCode.getIssuedAtNano();
-				Long expiresAtSecond = tokenCode.getExpiresAtSecond();
-				Long expiresAtNano = tokenCode.getExpiresAtNano();
-
-				Instant issuedAt = Instant.ofEpochSecond(issuedAtSecond, issuedAtNano);
-				Instant expiresAt = Instant.ofEpochSecond(expiresAtSecond, expiresAtNano);
-
-				OAuth2AuthorizationCode oauth2AuthorizationCode = new OAuth2AuthorizationCode(tokenValue, issuedAt,
-						expiresAt);
-
-				authorization = OAuth2Authorization.from(authorization).token(oauth2AuthorizationCode).build();
-			}
-
-			stringRedisTemplate.expire(idKey(authorization.getId()), timeout, TimeUnit.SECONDS);
-			stringRedisTemplate.expire(tokenKey(token, OAuth2TokenType.REFRESH_TOKEN), timeout, TimeUnit.SECONDS);
-			stringRedisTemplate.expire(tokenKey(token, OAuth2TokenType.ACCESS_TOKEN), timeout, TimeUnit.SECONDS);
+			stringRedisTemplate.opsForHash().putAll(tokenKey, map);
+			stringRedisTemplate.expire(tokenKey, timeout, TimeUnit.SECONDS);
 		}
 
-		return authorization;
+		OAuth2Authorization.Token<OidcIdToken> oidcIdTokenToken = authorization.getToken(OidcIdToken.class);
+		if (oidcIdTokenToken != null) {
+			String tokenValue = oidcIdTokenToken.getToken().getTokenValue();
+			String oidcIdToken = objectMapper.writeValueAsString(oidcIdTokenToken);
+			String tokenKey = tokenKey(new OAuth2TokenType(OidcIdToken.class.getSimpleName()), tokenValue);
+
+			Map<String, String> map = new HashMap<>();
+			map.put("id", json);
+			map.put(OidcIdToken.class.getSimpleName(), oidcIdToken);
+
+			stringRedisTemplate.opsForHash().putAll(tokenKey, map);
+			stringRedisTemplate.expire(tokenKey, timeout, TimeUnit.SECONDS);
+		}
+
+		OAuth2Authorization.Token<OAuth2AccessToken> accessToken = authorization.getAccessToken();
+		if (accessToken != null) {
+			TokenSettings tokenSettings = registeredClient.getTokenSettings();
+			Duration refreshTokenTimeToLive = tokenSettings.getRefreshTokenTimeToLive();
+
+			String tokenValue = accessToken.getToken().getTokenValue();
+			String tokenKey = tokenKey(OAuth2TokenType.ACCESS_TOKEN, tokenValue);
+
+			stringRedisTemplate.opsForValue().set(tokenKey, json, refreshTokenTimeToLive);
+		}
+
+		OAuth2Authorization.Token<OAuth2RefreshToken> refreshToken = authorization.getRefreshToken();
+		if (refreshToken != null) {
+			TokenSettings tokenSettings = registeredClient.getTokenSettings();
+			Duration refreshTokenTimeToLive = tokenSettings.getRefreshTokenTimeToLive();
+
+			String tokenValue = refreshToken.getToken().getTokenValue();
+			String tokenKey = tokenKey(OAuth2TokenType.REFRESH_TOKEN, tokenValue);
+
+			stringRedisTemplate.opsForValue().set(tokenKey, json, refreshTokenTimeToLive);
+		}
+
+		Object state = authorization.getAttribute(OAuth2ParameterNames.STATE);
+		if (state != null) {
+			TokenSettings tokenSettings = registeredClient.getTokenSettings();
+			Duration authorizationCodeTimeToLive = tokenSettings.getAuthorizationCodeTimeToLive();
+
+			String tokenKey = tokenKey(new OAuth2TokenType(OAuth2ParameterNames.STATE), state.toString());
+
+			stringRedisTemplate.opsForValue().set(tokenKey, json, authorizationCodeTimeToLive);
+		}
 	}
 
 	public String idKey(String id) {
@@ -305,14 +342,15 @@ public class RedisOAuth2AuthorizationService implements OAuth2AuthorizationServi
 		return String.format("%s:%s:id:%s", prefix, TABLE_NAME, id);
 	}
 
-	public String tokenKey(String token, OAuth2TokenType tokenType) {
+	public String tokenKey(OAuth2TokenType tokenType, String token) {
 		String prefix = properties.getPrefix();
-		return String.format("%s:%s:token:%s:%s", prefix, TABLE_NAME, tokenType.getValue(), token);
-	}
 
-	public String codeTokenKey(String token, OAuth2TokenType tokenType) {
-		String prefix = properties.getPrefix();
-		return prefix + ":oauth2_authorization:token:id:" + tokenType.getValue() + ":" + token;
+		// 用于缩短 key
+		PasswordUtils passwordUtils = new PasswordUtils(PasswordUtils.Algorithm.MD5);
+
+		String encode = passwordUtils.encode(token);
+
+		return String.format("%s:%s:%s:%s", prefix, TABLE_NAME, tokenType.getValue(), encode);
 	}
 
 }
