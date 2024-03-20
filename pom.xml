@@ -18,7 +18,7 @@
 
         <commons-lang3.version>3.14.0</commons-lang3.version>
 
-        <spring-security-oauth2-authorization-server.version>0.4.5</spring-security-oauth2-authorization-server.version>
+        <spring-security-oauth2-authorization-server.version>1.1.6</spring-security-oauth2-authorization-server.version>
 
         <lombok-maven-plugin.version>1.18.20.0</lombok-maven-plugin.version>
         <git-commit-id-plugin.version>4.9.10</git-commit-id-plugin.version>
