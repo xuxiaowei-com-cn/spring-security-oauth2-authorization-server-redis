@@ -15,7 +15,7 @@ public class AlgorithmUtils implements PasswordEncoder {
 	private final Digester digester;
 
 	public AlgorithmUtils(Algorithm algorithm) {
-		if (algorithm == null || Algorithm.NULL.equals(algorithm)) {
+		if (Algorithm.NOOP.equals(algorithm)) {
 			this.digester = null;
 			return;
 		}
@@ -56,7 +56,7 @@ public class AlgorithmUtils implements PasswordEncoder {
 	@Getter
 	public enum Algorithm {
 
-		NULL(null),
+		NOOP("NOOP"),
 
 		MD5("MD5"),
 
