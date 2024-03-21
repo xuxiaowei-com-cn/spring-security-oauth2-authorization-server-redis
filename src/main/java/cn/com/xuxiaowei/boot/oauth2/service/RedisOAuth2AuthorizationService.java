@@ -278,6 +278,9 @@ public class RedisOAuth2AuthorizationService implements OAuth2AuthorizationServi
 		OAuth2Authorization.Token<OAuth2AuthorizationCode> oauth2AuthorizationCodeToken = authorization
 			.getToken(OAuth2AuthorizationCode.class);
 		if (oauth2AuthorizationCodeToken != null) {
+			TokenSettings tokenSettings = registeredClient.getTokenSettings();
+			Duration authorizationCodeTimeToLive = tokenSettings.getAuthorizationCodeTimeToLive();
+
 			String tokenValue = oauth2AuthorizationCodeToken.getToken().getTokenValue();
 			String authorizationCode = objectMapper.writeValueAsString(oauth2AuthorizationCodeToken);
 			String tokenKey = tokenKey(new OAuth2TokenType(OAuth2ParameterNames.CODE), tokenValue);
@@ -287,7 +290,7 @@ public class RedisOAuth2AuthorizationService implements OAuth2AuthorizationServi
 			map.put(OAuth2AuthorizationCode.class.getSimpleName(), authorizationCode);
 
 			stringRedisTemplate.opsForHash().putAll(tokenKey, map);
-			stringRedisTemplate.expire(tokenKey, timeout, TimeUnit.SECONDS);
+			stringRedisTemplate.expire(tokenKey, authorizationCodeTimeToLive);
 		}
 
 		OAuth2Authorization.Token<OidcIdToken> oidcIdTokenToken = authorization.getToken(OidcIdToken.class);
