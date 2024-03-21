@@ -102,8 +102,7 @@ class AuthorizationCodeTests {
 		redisRegisteredClientRepository.save(registeredClient);
 
 		String redirectUri = "https://home.baidu.com/home/index/contact_us";
-		// String scope = "openid profile message.read message.write";
-		String scope = "profile message.read message.write";
+		String scope = "openid profile message.read message.write";
 
 		// 循环多次，使用授权码模式授权，验证手动授权
 		for (int i = 0; i < 3; i++) {

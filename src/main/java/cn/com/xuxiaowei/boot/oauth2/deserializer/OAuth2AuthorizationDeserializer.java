@@ -304,6 +304,66 @@ public class OAuth2AuthorizationDeserializer extends StdDeserializer<OAuth2Autho
 
 		private Long expiresAtNano;
 
+		private Map<String, Object> claims;
+
+		private String authenticationContextClass;
+
+		private String subject;
+
+		private String issuer;
+
+		private BigDecimal authenticatedAt;
+
+		private String authorizationCodeHash;
+
+		private String authorizedParty;
+
+		private List<String> audience;
+
+		private List<String> authenticationMethods;
+
+		private String accessTokenHash;
+
+		private String nonce;
+
+		private Map<String, Object> address;
+
+		private String locale;
+
+		private String fullName;
+
+		private String zoneInfo;
+
+		private String profile;
+
+		private String preferredUsername;
+
+		private String phoneNumber;
+
+		private String phoneNumberVerified;
+
+		private String email;
+
+		private String emailVerified;
+
+		private String middleName;
+
+		private String givenName;
+
+		private String familyName;
+
+		private String website;
+
+		private String nickName;
+
+		private String birthdate;
+
+		private String updatedAt;
+
+		private String picture;
+
+		private String gender;
+
 		public void setIssuedAt(BigDecimal issuedAt) {
 			this.issuedAt = issuedAt;
 			BigDecimal issuedAtSecondBigDecimal = issuedAt.setScale(0, RoundingMode.DOWN);
