@@ -91,6 +91,9 @@ public class RedisOAuth2AuthorizationService implements OAuth2AuthorizationServi
 	@SneakyThrows
 	@Override
 	public void save(OAuth2Authorization authorization) {
+
+		jdbcOAuth2AuthorizationService.save(authorization);
+
 		String registeredClientId = authorization.getRegisteredClientId();
 		RegisteredClient registeredClient = registeredClientRepository.findById(registeredClientId);
 
