@@ -102,10 +102,13 @@ public class RedisRegisteredClientRepositoryTests {
 			assertEquals(registeredClient, getByIdRegisteredClient);
 
 			String clientIdKey = redisRegisteredClientRepository.clientIdKey(clientId);
-			String getByClientId = stringRedisTemplate.opsForValue().get(clientIdKey);
-			assertNotNull(getByClientId);
-			RegisteredClient getByClientIdRegisteredClient = objectMapper.readValue(getByClientId,
-					RegisteredClient.class);
+			String getId = stringRedisTemplate.opsForValue().get(clientIdKey);
+			assertNotNull(getId);
+			assertEquals(id, getId);
+
+			String idedKey = redisRegisteredClientRepository.idKey(getId);
+			String string = stringRedisTemplate.opsForValue().get(idedKey);
+			RegisteredClient getByClientIdRegisteredClient = objectMapper.readValue(string, RegisteredClient.class);
 			assertEquals(registeredClient, getByClientIdRegisteredClient);
 		}
 	}

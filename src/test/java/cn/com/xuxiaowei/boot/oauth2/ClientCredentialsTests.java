@@ -1,7 +1,7 @@
 package cn.com.xuxiaowei.boot.oauth2;
 
+import cn.com.xuxiaowei.boot.oauth2.annotation.EnableOAuth2Jdbc;
 import cn.com.xuxiaowei.boot.oauth2.annotation.EnableOAuth2Redis;
-import cn.com.xuxiaowei.boot.oauth2.service.RedisRegisteredClientRepository;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.ObjectWriter;
@@ -20,6 +20,7 @@ import org.springframework.security.oauth2.core.ClientAuthenticationMethod;
 import org.springframework.security.oauth2.core.endpoint.OAuth2ParameterNames;
 import org.springframework.security.oauth2.core.oidc.OidcScopes;
 import org.springframework.security.oauth2.server.authorization.client.RegisteredClient;
+import org.springframework.security.oauth2.server.authorization.client.RegisteredClientRepository;
 import org.springframework.security.oauth2.server.authorization.settings.ClientSettings;
 import org.springframework.util.LinkedMultiValueMap;
 import org.springframework.util.MultiValueMap;
@@ -49,8 +50,22 @@ class ClientCredentialsTests {
 	private int serverPort;
 
 	@Autowired
-	private RedisRegisteredClientRepository redisRegisteredClientRepository;
+	private RegisteredClientRepository registeredClientRepository;
 
+	// @formatter:off
+	/**
+	 * 使用 {@link EnableOAuth2Redis} 注解，循环 10 次使用 凭证式，日志仅打印 5 次 oauth2_registered_client 表：<p>
+	 * 1. 创建 oauth2_registered_client 表结构<p>
+	 * 2. 保存数据前，查询主键 id 是否重复<p>
+	 * 3. 保存数据前，查询客户ID client_id 是否重复<p>
+	 * 4. 保存数据前，查询客户秘钥 client_secret 是否重复<p>
+	 * 5. 保存数据<p>
+	 * <p>
+	 * 使用 {@link EnableOAuth2Jdbc} 注解，循环 10 次使用 凭证式，日志仅打印 15 次 oauth2_registered_client 表：<p>
+	 * 1. 前 5 次与上方相同<p>
+	 * 2. 后 10 次都是根据 客户ID client_id 查询<p>
+	 */
+	// @formatter:on
 	@Test
 	void start() throws JsonProcessingException {
 
@@ -80,40 +95,42 @@ class ClientCredentialsTests {
 			.clientSettings(ClientSettings.builder().requireAuthorizationConsent(true).build())
 			.build();
 
-		// 保存随机客户：保存到 Redis、H2 数据库中
-		redisRegisteredClientRepository.save(registeredClient);
+		// 保存随机客户
+		registeredClientRepository.save(registeredClient);
 
-		RestTemplate restTemplate = new RestTemplate();
-		HttpHeaders httpHeaders = new HttpHeaders();
-		httpHeaders.setContentType(MediaType.APPLICATION_FORM_URLENCODED);
-		httpHeaders.setBasicAuth(clientId, clientSecret);
-		MultiValueMap<String, String> requestBody = new LinkedMultiValueMap<>();
-		requestBody.put(OAuth2ParameterNames.GRANT_TYPE, Collections.singletonList("client_credentials"));
-		requestBody.put(OAuth2ParameterNames.SCOPE,
-				Collections.singletonList("openid profile message.read message.write"));
-		HttpEntity<MultiValueMap<String, String>> httpEntity = new HttpEntity<>(requestBody, httpHeaders);
+		for (int i = 0; i < 10; i++) {
+			RestTemplate restTemplate = new RestTemplate();
+			HttpHeaders httpHeaders = new HttpHeaders();
+			httpHeaders.setContentType(MediaType.APPLICATION_FORM_URLENCODED);
+			httpHeaders.setBasicAuth(clientId, clientSecret);
+			MultiValueMap<String, String> requestBody = new LinkedMultiValueMap<>();
+			requestBody.put(OAuth2ParameterNames.GRANT_TYPE, Collections.singletonList("client_credentials"));
+			requestBody.put(OAuth2ParameterNames.SCOPE,
+					Collections.singletonList("openid profile message.read message.write"));
+			HttpEntity<MultiValueMap<String, String>> httpEntity = new HttpEntity<>(requestBody, httpHeaders);
 
-		// OAuth 2.1 凭证式授权
-		Map map = restTemplate.postForObject(String.format("http://127.0.0.1:%d/oauth2/token", serverPort), httpEntity,
-				Map.class);
+			// OAuth 2.1 凭证式授权
+			Map map = restTemplate.postForObject(String.format("http://127.0.0.1:%d/oauth2/token", serverPort),
+					httpEntity, Map.class);
 
-		// 返回值不为空
-		assertNotNull(map);
+			// 返回值不为空
+			assertNotNull(map);
 
-		ObjectMapper objectMapper = new ObjectMapper();
-		ObjectWriter objectWriter = objectMapper.writerWithDefaultPrettyPrinter();
+			ObjectMapper objectMapper = new ObjectMapper();
+			ObjectWriter objectWriter = objectMapper.writerWithDefaultPrettyPrinter();
 
-		log.info("token:\n{}", objectWriter.writeValueAsString(map));
+			log.info("token:\n{}", objectWriter.writeValueAsString(map));
 
-		// 返回值
-		// 授权 Token
-		assertNotNull(map.get(OAuth2ParameterNames.ACCESS_TOKEN));
-		// 授权范围
-		assertNotNull(map.get(OAuth2ParameterNames.SCOPE));
-		// 授权类型
-		assertNotNull(map.get(OAuth2ParameterNames.TOKEN_TYPE));
-		// 过期时间
-		assertNotNull(map.get(OAuth2ParameterNames.EXPIRES_IN));
+			// 返回值
+			// 授权 Token
+			assertNotNull(map.get(OAuth2ParameterNames.ACCESS_TOKEN));
+			// 授权范围
+			assertNotNull(map.get(OAuth2ParameterNames.SCOPE));
+			// 授权类型
+			assertNotNull(map.get(OAuth2ParameterNames.TOKEN_TYPE));
+			// 过期时间
+			assertNotNull(map.get(OAuth2ParameterNames.EXPIRES_IN));
+		}
 	}
 
 }
