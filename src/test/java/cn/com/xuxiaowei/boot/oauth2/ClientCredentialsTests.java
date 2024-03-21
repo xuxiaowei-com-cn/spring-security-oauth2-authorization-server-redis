@@ -54,16 +54,21 @@ class ClientCredentialsTests {
 
 	// @formatter:off
 	/**
-	 * 使用 {@link EnableOAuth2Redis} 注解，循环 10 次使用 凭证式，日志仅打印 5 次 oauth2_registered_client 表：<p>
+	 * 使用 {@link EnableOAuth2Redis} 注解，循环 10 次使用 凭证式，日志仅打印 5 次 oauth2_registered_client 表、21 次 oauth2_authorization 表：<p>
 	 * 1. 创建 oauth2_registered_client 表结构<p>
-	 * 2. 保存数据前，查询主键 id 是否重复<p>
-	 * 3. 保存数据前，查询客户ID client_id 是否重复<p>
-	 * 4. 保存数据前，查询客户秘钥 client_secret 是否重复<p>
-	 * 5. 保存数据<p>
+	 * 2. 保存 oauth2_registered_client 表 数据前，查询主键 id 是否重复<p>
+	 * 3. 保存 oauth2_registered_client 表 数据前，查询客户ID client_id 是否重复<p>
+	 * 4. 保存 oauth2_registered_client 表 数据前，查询客户秘钥 client_secret 是否重复<p>
+	 * 5. 保存 oauth2_registered_client 表 数据<p>
+	 * 6. 创建 oauth2_authorization 表结构<p>
+	 * 7. 保存 oauth2_authorization 表 数据前，查询主键 id 是否重复<p>
+	 * 8. 保存 oauth2_authorization 表 数据<p>
+	 * 9. 每多训话一次，就多执行一次 7、8
 	 * <p>
-	 * 使用 {@link EnableOAuth2Jdbc} 注解，循环 10 次使用 凭证式，日志仅打印 15 次 oauth2_registered_client 表：<p>
-	 * 1. 前 5 次与上方相同<p>
-	 * 2. 后 10 次都是根据 客户ID client_id 查询<p>
+	 * 使用 {@link EnableOAuth2Jdbc} 注解，循环 10 次使用 凭证式，日志仅打印 15 次 oauth2_registered_client 表、21 次 oauth2_authorization 表：<p>
+	 * 1. oauth2_registered_client 表 前 5 次与上方相同<p>
+	 * 2. oauth2_registered_client 表 后 10 次都是根据 客户ID client_id 查询<p>
+	 * 3. oauth2_authorization 表 与上方相同<p>
 	 */
 	// @formatter:on
 	@Test
