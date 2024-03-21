@@ -155,11 +155,15 @@ class RedisOAuth2AuthorizationServiceTests {
 
 		String idKey = redisOAuth2AuthorizationService.idKey(oauth2Authorization.getId());
 
-		String json = stringRedisTemplate.opsForValue().get(idKey);
-		assertNotNull(json);
+		Map<Object, Object> entries = stringRedisTemplate.opsForHash().entries(idKey);
+		assertNotNull(entries);
+
+		Object idValue = entries.get("id");
+		assertNotNull(idValue);
 
 		ObjectMapper objectMapper = redisOAuth2AuthorizationService.getObjectMapper();
-		OAuth2Authorization oauth2AuthorizationByRedis = objectMapper.readValue(json, OAuth2Authorization.class);
+		OAuth2Authorization oauth2AuthorizationByRedis = objectMapper.readValue(idValue.toString(),
+				OAuth2Authorization.class);
 		assertNotNull(oauth2AuthorizationByRedis);
 
 		// @formatter:off
