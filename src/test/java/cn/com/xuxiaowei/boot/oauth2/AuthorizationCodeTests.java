@@ -1,8 +1,8 @@
 package cn.com.xuxiaowei.boot.oauth2;
 
+import cn.com.xuxiaowei.boot.oauth2.annotation.EnableOAuth2Jdbc;
 import cn.com.xuxiaowei.boot.oauth2.annotation.EnableOAuth2Redis;
 import cn.com.xuxiaowei.boot.oauth2.constant.RedisConstants;
-import cn.com.xuxiaowei.boot.oauth2.service.RedisRegisteredClientRepository;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.ObjectWriter;
 import com.gargoylesoftware.htmlunit.Page;
@@ -28,6 +28,7 @@ import org.springframework.security.oauth2.core.ClientAuthenticationMethod;
 import org.springframework.security.oauth2.core.endpoint.OAuth2ParameterNames;
 import org.springframework.security.oauth2.core.oidc.OidcScopes;
 import org.springframework.security.oauth2.server.authorization.client.RegisteredClient;
+import org.springframework.security.oauth2.server.authorization.client.RegisteredClientRepository;
 import org.springframework.security.oauth2.server.authorization.settings.ClientSettings;
 import org.springframework.util.LinkedMultiValueMap;
 import org.springframework.util.MultiValueMap;
@@ -66,8 +67,26 @@ class AuthorizationCodeTests {
 	private WebClient webClient;
 
 	@Autowired
-	private RedisRegisteredClientRepository redisRegisteredClientRepository;
+	private RegisteredClientRepository registeredClientRepository;
 
+	// @formatter:off
+	/**
+	 * 使用 {@link EnableOAuth2Redis} 注解，循环 10 次使用 凭证式，日志仅打印 5 次 oauth2_registered_client 表、63 次 oauth2_authorization 表：<p>
+	 * 1. 创建 oauth2_registered_client 表结构<p>
+	 * 2. 保存 oauth2_registered_client 表 数据前，查询主键 id 是否重复<p>
+	 * 3. 保存 oauth2_registered_client 表 数据前，查询客户ID client_id 是否重复<p>
+	 * 4. 保存 oauth2_registered_client 表 数据前，查询客户秘钥 client_secret 是否重复<p>
+	 * 5. 保存 oauth2_registered_client 表 数据<p>
+	 * 6. 创建 oauth2_authorization 表结构<p>
+	 * 7. 保存 oauth2_authorization 表 数据前，查询主键 id 是否重复<p>
+	 * 8. 保存 oauth2_authorization 表 数据：保存 状态码<p>
+	 * 9. 更新 oauth2_authorization 表 数据：更新 授权范围（调用保存接口，更新前有一次查询）<p>
+	 * 10. 更新 oauth2_authorization 表 数据：更新 授权Token、刷新Token（调用保存接口，更新前有一次查询）<p>
+	 * 11. ...
+	 * <p>
+	 * 使用 {@link EnableOAuth2Jdbc} 注解，循环 10 次使用 凭证式，日志仅打印 97 次 oauth2_registered_client 表、108 次 oauth2_authorization 表：<p>
+	 */
+	// @formatter:on
 	@Test
 	void start() throws IOException {
 
@@ -99,13 +118,13 @@ class AuthorizationCodeTests {
 			.build();
 
 		// 保存随机客户：保存到 Redis、H2 数据库中
-		redisRegisteredClientRepository.save(registeredClient);
+		registeredClientRepository.save(registeredClient);
 
 		String redirectUri = "https://home.baidu.com/home/index/contact_us";
 		String scope = "openid profile message.read message.write";
 
 		// 循环多次，使用授权码模式授权，验证手动授权
-		for (int i = 0; i < 3; i++) {
+		for (int i = 0; i < 10; i++) {
 			String state = UUID.randomUUID().toString();
 
 			HtmlPage loginPage = webClient.getPage("/login");
