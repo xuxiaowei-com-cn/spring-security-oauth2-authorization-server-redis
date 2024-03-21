@@ -63,7 +63,7 @@ class ClientCredentialsTests {
 	 * 6. 创建 oauth2_authorization 表结构<p>
 	 * 7. 保存 oauth2_authorization 表 数据前，查询主键 id 是否重复<p>
 	 * 8. 保存 oauth2_authorization 表 数据<p>
-	 * 9. 每多训话一次，就多执行一次 7、8
+	 * 9. 每多循环一次，就多执行一次 7、8
 	 * <p>
 	 * 使用 {@link EnableOAuth2Jdbc} 注解，循环 10 次使用 凭证式，日志仅打印 15 次 oauth2_registered_client 表、21 次 oauth2_authorization 表：<p>
 	 * 1. oauth2_registered_client 表 前 5 次与上方相同<p>
