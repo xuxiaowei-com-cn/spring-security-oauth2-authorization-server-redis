@@ -41,6 +41,14 @@ jobs:
           server-id: github # Value of the distributionManagement/repository/id field of the pom.xml
           settings-path: ${{ github.workspace }} # location for the settings.xml file
 
+      - name: Import GPG
+        run: |
+          gpg --version
+          GPG_FILE=$RUNNER_TEMP/gpg
+          echo $GPG_FILE
+          echo "${{ secrets.xuxiaowei_0x30F97859_SECRET }}" > $GPG_FILE
+          gpg --import $GPG_FILE
+
       - name: Set ENV
         shell: sh
         run: |
@@ -56,13 +64,13 @@ jobs:
           echo ${{ env.SPRING_SECURITY_OAUTH2_AUTHORIZATION_SERVER_REDIS_HOST }}
 
       - name: Build with Maven
-        run: mvn clean package source:jar javadoc:jar -U -DskipTests=true
+        run: mvn clean package source:jar javadoc:jar -U -DskipTests=true -Pgpg
 
       - name: Test
         run: mvn test -DskipTests=false
 
       - name: Publish to GitHub Packages Apache Maven
-        run: mvn source:jar javadoc:jar deploy -Pgithub -s $GITHUB_WORKSPACE/settings.xml
+        run: mvn source:jar javadoc:jar deploy -Pgithub -Pgpg -s $GITHUB_WORKSPACE/settings.xml
         env:
           GITHUB_TOKEN: ${{ github.token }}
 
@@ -70,6 +78,6 @@ jobs:
         run: sed -i "s#</servers>#<server><id>ossrh</id><username>${{ secrets.OSSRH_USER }}</username><password>${{ secrets.OSSRH_PASS }}</password></server>&#" $GITHUB_WORKSPACE/settings.xml
 
       - name: Publish to Maven Central
-        run: mvn source:jar javadoc:jar deploy -Possrh -s $GITHUB_WORKSPACE/settings.xml
+        run: mvn source:jar javadoc:jar deploy -Possrh -Pgpg -s $GITHUB_WORKSPACE/settings.xml
         env:
           GITHUB_TOKEN: ${{ github.token }}
