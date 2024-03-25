@@ -20,6 +20,7 @@
 
         <spring-security-oauth2-authorization-server.version>0.4.5</spring-security-oauth2-authorization-server.version>
 
+        <maven-gpg-plugin.version>3.1.0</maven-gpg-plugin.version>
         <lombok-maven-plugin.version>1.18.20.0</lombok-maven-plugin.version>
         <git-commit-id-plugin.version>4.9.10</git-commit-id-plugin.version>
         <jacoco-maven-plugin.version>0.8.11</jacoco-maven-plugin.version>
@@ -113,6 +114,39 @@
                     </url>
                 </repository>
             </distributionManagement>
+        </profile>
+        <profile>
+            <!-- 使用 -Pgpg 激活此构建进行文件签名 -->
+            <id>gpg</id>
+            <build>
+                <plugins>
+                    <!-- https://mvnrepository.com/artifact/org.apache.maven.plugins/maven-gpg-plugin -->
+                    <!-- 安装：https://www.gpg4win.org/thanks-for-download.html -->
+                    <!--
+                        1、新建密钥对
+                        2、生成密钥对副本
+                        3、上传公钥至目录服务器（手动上传（需要验证邮箱）：https://keys.openpgp.org/upload/）
+                     -->
+                    <!--
+                        单个文件签名：
+                        gpg &#45;&#45;armor &#45;&#45;detach-sign 文件名
+                     -->
+                    <plugin>
+                        <groupId>org.apache.maven.plugins</groupId>
+                        <artifactId>maven-gpg-plugin</artifactId>
+                        <version>${maven-gpg-plugin.version}</version>
+                        <executions>
+                            <execution>
+                                <id>sign-artifacts</id>
+                                <phase>verify</phase>
+                                <goals>
+                                    <goal>sign</goal>
+                                </goals>
+                            </execution>
+                        </executions>
+                    </plugin>
+                </plugins>
+            </build>
         </profile>
     </profiles>
 
