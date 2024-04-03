@@ -90,6 +90,8 @@ class AuthorizationCodeTests {
 	@Test
 	void start() throws IOException {
 
+		webClient.getOptions().setCssEnabled(false);
+
 		PasswordEncoder passwordEncoder = PasswordEncoderFactories.createDelegatingPasswordEncoder();
 
 		String id = UUID.randomUUID().toString();
